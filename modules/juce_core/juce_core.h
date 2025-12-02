@@ -361,6 +361,7 @@ JUCE_END_IGNORE_WARNINGS_MSVC
 #include "network/juce_WebInputStream.h"
 #include "streams/juce_URLInputSource.h"
 #include "time/juce_PerformanceCounter.h"
+#include "time/juce_TimedDiagnostic.h"
 #include "unit_tests/juce_UnitTest.h"
 #include "xml/juce_XmlDocument.h"
 #include "xml/juce_XmlElement.h"
