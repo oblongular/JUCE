@@ -121,7 +121,7 @@ public:
 class GraphicsDemoBase : public Component
 {
 public:
-    GraphicsDemoBase (ControllersComponent& cc, const String& name)
+    GraphicsDemoBase (ControllersComponent* cc, const String& name)
         : Component (name),
           controls (cc)
     {
@@ -135,19 +135,19 @@ public:
 
         AffineTransform t;
 
-        if (controls.animateRotation.getToggleState())
+        if (controls != nullptr && controls->animateRotation.getToggleState())
             t = t.rotated (rotation.getValue() * MathConstants<float>::twoPi);
 
-        if (controls.animateSize.getToggleState())
+        if (controls != nullptr && controls->animateSize.getToggleState())
             t = t.scaled (0.3f + size.getValue() * 2.0f);
 
-        if (controls.animatePosition.getToggleState())
+        if (controls != nullptr && controls->animatePosition.getToggleState())
             t = t.translated (hw + hw * (offsetX.getValue() - 0.5f),
                               hh + hh * (offsetY.getValue() - 0.5f));
         else
             t = t.translated (hw, hh);
 
-        if (controls.animateShear.getToggleState())
+        if (controls != nullptr && controls->animateShear.getToggleState())
             t = t.sheared (shear.getValue() * 2.0f - 1.0f, 0.0f);
 
         return t;
@@ -155,7 +155,7 @@ public:
 
     float getAlpha() const
     {
-        if (controls.animateAlpha.getToggleState())
+        if (controls != nullptr && controls->animateAlpha.getToggleState())
             return alpha.getValue();
 
         return 1.0f;
@@ -170,12 +170,12 @@ public:
             // construction when it goes out of scope. We use it here to avoid clipping the fps text
             const Graphics::ScopedSaveState state (g);
 
-            if (controls.clipToRectangle.getToggleState())  clipToRectangle (g);
-            if (controls.clipToPath     .getToggleState())  clipToPath (g);
-            if (controls.clipToImage    .getToggleState())  clipToImage (g);
+            if (controls != nullptr && controls->clipToRectangle.getToggleState())  clipToRectangle (g);
+            if (controls != nullptr && controls->clipToPath     .getToggleState())  clipToPath (g);
+            if (controls != nullptr && controls->clipToImage    .getToggleState())  clipToImage (g);
 
-            g.setImageResamplingQuality (controls.quality.getToggleState() ? Graphics::highResamplingQuality
-                                                                           : Graphics::mediumResamplingQuality);
+            g.setImageResamplingQuality (controls != nullptr && controls->quality.getToggleState() ? Graphics::highResamplingQuality
+                                                                                                   : Graphics::mediumResamplingQuality);
 
             // take a note of the time before the render
             startTime = Time::getMillisecondCounterHiRes();
@@ -183,6 +183,9 @@ public:
             // then let the demo draw itself..
             drawDemo (g);
         }
+
+        if (controls == nullptr)
+            return;
 
         auto now = Time::getMillisecondCounterHiRes();
         auto filtering = 0.08;
@@ -271,7 +274,7 @@ public:
     }
 
     //==============================================================================
-    ControllersComponent& controls;
+    ControllersComponent* controls;
 
     SlowerBouncingNumber offsetX, offsetY, rotation, size, shear, alpha, clipRectX,
                          clipRectY, clipPathX, clipPathY, clipPathDepth, clipPathAngle,
@@ -288,7 +291,7 @@ public:
 class RectangleFillTypesDemo final : public GraphicsDemoBase
 {
 public:
-    RectangleFillTypesDemo (ControllersComponent& cc)
+    RectangleFillTypesDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "Fill Types: Rectangles")
     {}
 
@@ -324,7 +327,7 @@ public:
 class PathsDemo final : public GraphicsDemoBase
 {
 public:
-    PathsDemo (ControllersComponent& cc, bool linear, bool radial)
+    PathsDemo (ControllersComponent* cc, bool linear, bool radial)
         : GraphicsDemoBase (cc, String ("Paths") + (radial ? ": Radial Gradients"
                                                            : (linear ? ": Linear Gradients"
                                                                      : ": Solid"))),
@@ -385,7 +388,7 @@ public:
 class StrokesDemo final : public GraphicsDemoBase
 {
 public:
-    StrokesDemo (ControllersComponent& cc)
+    StrokesDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "Paths: Stroked")
     {}
 
@@ -418,7 +421,7 @@ public:
 class ImagesRenderingDemo final : public GraphicsDemoBase
 {
 public:
-    ImagesRenderingDemo (ControllersComponent& cc, bool argb, bool tiled)
+    ImagesRenderingDemo (ControllersComponent* cc, bool argb, bool tiled)
         : GraphicsDemoBase (cc, String ("Images") + (argb ? ": ARGB" : ": RGB") + (tiled ? " Tiled" : String() )),
           isArgb (argb), isTiled (tiled)
     {
@@ -456,7 +459,7 @@ public:
 class GlyphsDemo final : public GraphicsDemoBase
 {
 public:
-    GlyphsDemo (ControllersComponent& cc)
+    GlyphsDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "Glyphs")
     {
         glyphs.addFittedText (FontOptions { 20.0f }, "The Quick Brown Fox Jumps Over The Lazy Dog",
@@ -476,7 +479,7 @@ public:
 class SVGDemo final : public GraphicsDemoBase
 {
 public:
-    SVGDemo (ControllersComponent& cc)
+    SVGDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "SVG")
     {
         createSVGDrawable();
@@ -520,7 +523,7 @@ public:
 class BlurDemo final : public GraphicsDemoBase
 {
 public:
-    BlurDemo (ControllersComponent& cc)
+    BlurDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "Blur")
     {
         image.setBackupEnabled (false);
@@ -597,7 +600,7 @@ public:
 class LinesDemo final : public GraphicsDemoBase
 {
 public:
-    LinesDemo (ControllersComponent& cc)
+    LinesDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "Lines")
     {}
 
@@ -689,7 +692,7 @@ public:
 class ShapesDemo final : public GraphicsDemoBase
 {
 public:
-    explicit ShapesDemo (ControllersComponent& cc)
+    explicit ShapesDemo (ControllersComponent* cc)
         : GraphicsDemoBase (cc, "Shapes")
     {}
 
@@ -777,7 +780,7 @@ class TestListComponent final : public Component,
                                 private ListBoxModel
 {
 public:
-    TestListComponent (DemoHolderComponent& holder, ControllersComponent& controls)
+    TestListComponent (DemoHolderComponent& holder, ControllersComponent* controls)
         : demoHolder (holder)
     {
         demos.add (new PathsDemo (controls, false, true));
@@ -851,8 +854,9 @@ class GraphicsDemo final : public Component
 {
 public:
     GraphicsDemo()
-        : testList (demoHolder, controllersComponent)
+        : testList (demoHolder, &controllersComponent)
     {
+        setName ("Graphics demo");
         setOpaque (true);
 
         addAndMakeVisible (demoHolder);

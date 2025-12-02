@@ -1577,6 +1577,7 @@ struct WidgetsDemo final : public Component
     WidgetsDemo (bool isRunningComponenTransformsDemo = false)
         : tabs (isRunningComponenTransformsDemo)
     {
+        setName ("Widgets demo");
         setOpaque (true);
         addAndMakeVisible (tabs);
 
