@@ -603,6 +603,8 @@ public:
 
     void drawDemo (Graphics& g) override
     {
+        g.addTransform (AffineTransform::translation (-getWidth() / 2, -getHeight() / 2).followedBy (getTransform()));
+
         {
             RectangleList<float> verticalLines;
             verticalLines.ensureStorageAllocated (getWidth());
