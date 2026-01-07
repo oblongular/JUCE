@@ -603,60 +603,86 @@ public:
 
     void drawDemo (Graphics& g) override
     {
-        g.addTransform (AffineTransform::translation (-getWidth() / 2, -getHeight() / 2).followedBy (getTransform()));
+        const auto bounds = getLocalBounds().toFloat();
+
+        g.addTransform (AffineTransform::translation (-bounds.getWidth() / 2.0f,
+                                                      -bounds.getHeight() / 2.0f)
+                            .followedBy (getTransform()));
+
+        // There are two reasons to use a transparency layer here instead of
+        // setting the alpha of each colour.
+        //
+        //  1. To prevent semi-transparent lines occurring between rectangles in
+        //     the D2D renderer, each rectangle has been expanded in size so
+        //     there is a small overlap. A transparency layer prevents this
+        //     overlap from becoming visible when applying an alpha.
+        //
+        //  2. In the CoreGraphics renderer when applying an alpha, or clipping
+        //     to a path or image, lines would occur between rectangles that
+        //     were not resolved by expanding the rectangles size. This appears
+        //     to be a bug in CoreGraphics. However, drawing the changes into a
+        //     transparency layer appears to avoid the issue.
+
+        g.beginTransparencyLayer (getAlpha());
+        ScopeGuard scope { [&] { g.endTransparencyLayer(); }};
+
+        const auto lineWidth = 19 * thickness.getValue() + 1.0f;
 
         {
-            RectangleList<float> verticalLines;
-            verticalLines.ensureStorageAllocated (getWidth());
+            lines.clear();
 
-            auto pos = offset.getValue();
+            const auto pos = offset.getValue();
 
-            for (int x = 0; x < getWidth(); ++x)
+            for (auto x = 0.0f; x < bounds.getWidth(); x += lineWidth)
             {
-                auto y = (float) getHeight() * 0.3f;
-                auto length = y * std::abs (std::sin ((float) x / 100.0f + 2.0f * pos));
-                verticalLines.addWithoutMerging (Rectangle<float> ((float) x, y - length * 0.5f, 1.0f, length));
+                const auto y = bounds.getHeight() * 0.3f;
+                const auto length = y * std::abs (std::sin (x / 100.0f + 2.0f * pos));
+                const auto width = jmin (lineWidth, bounds.getRight() - x);
+                const Rectangle<float> lineBounds { x, y - length * 0.5f, width, length };
+                lines.addWithoutMerging (lineBounds.expanded (0.5f, 0.0f));
             }
 
-            g.setColour (Colours::blue.withAlpha (getAlpha()));
-            g.fillRectList (verticalLines);
+            g.setColour (Colours::blue);
+            g.fillRectList (lines);
         }
 
         {
-            RectangleList<float> horizontalLines;
-            horizontalLines.ensureStorageAllocated (getHeight());
+            lines.clear();
 
-            auto pos = offset.getValue();
+            const auto pos = offset.getValue();
 
-            for (int y = 0; y < getHeight(); ++y)
+            for (auto y = 0.0f; y < bounds.getWidth(); y += lineWidth)
             {
-                auto x = (float) getWidth() * 0.3f;
-                auto length = x * std::abs (std::sin ((float) y / 100.0f + 2.0f * pos));
-                horizontalLines.addWithoutMerging (Rectangle<float> (x - length * 0.5f, (float) y, length, 1.0f));
+                const auto x = bounds.getWidth() * 0.3f;
+                const auto length = x * std::abs (std::sin (y / 100.0f + 2.0f * pos));
+                const auto width = jmin (lineWidth, bounds.getBottom() - y);
+                const Rectangle<float> lineBounds { x - length * 0.5f, y, length, width };
+                lines.addWithoutMerging (lineBounds.expanded (0.0f, 0.5f));
             }
 
-            g.setColour (Colours::green.withAlpha (getAlpha()));
-            g.fillRectList (horizontalLines);
+            g.setGradientFill (ColourGradient (Colours::green,
+                                               bounds.getTopLeft(),
+                                               Colours::yellow,
+                                               bounds.withWidth (bounds.getWidth() / 2.0f).getBottomRight(), false));
+            g.fillRectList (lines);
         }
 
-        g.setColour (Colours::red.withAlpha (getAlpha()));
+        g.setColour (Colours::red);
 
-        auto w = (float) getWidth();
-        auto h = (float) getHeight();
+        g.drawLine (positions[0].getValue() * bounds.getWidth(),
+                    positions[1].getValue() * bounds.getHeight(),
+                    positions[2].getValue() * bounds.getWidth(),
+                    positions[3].getValue() * bounds.getHeight());
 
-        g.drawLine (positions[0].getValue() * w,
-                    positions[1].getValue() * h,
-                    positions[2].getValue() * w,
-                    positions[3].getValue() * h);
-
-        g.drawLine (positions[4].getValue() * w,
-                    positions[5].getValue() * h,
-                    positions[6].getValue() * w,
-                    positions[7].getValue() * h,
+        g.drawLine (positions[4].getValue() * bounds.getWidth(),
+                    positions[5].getValue() * bounds.getHeight(),
+                    positions[6].getValue() * bounds.getWidth(),
+                    positions[7].getValue() * bounds.getHeight(),
                     10.0f * thickness.getValue());
     }
 
     SlowerBouncingNumber offset, positions[8], thickness;
+    RectangleList<float> lines;
 };
 
 //==============================================================================
