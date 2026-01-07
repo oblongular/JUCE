@@ -729,8 +729,7 @@ public:
 };
 
 //==============================================================================
-class DemoHolderComponent final : public Component,
-                                  private Timer
+class DemoHolderComponent final : public Component
 {
 public:
     DemoHolderComponent()
@@ -744,12 +743,6 @@ public:
                             Colours::lightgrey, Colours::white);
     }
 
-    void timerCallback() override
-    {
-        if (currentDemo != nullptr)
-            currentDemo->repaint();
-    }
-
     void setDemo (GraphicsDemoBase* newDemo)
     {
         if (currentDemo != nullptr)
@@ -760,7 +753,6 @@ public:
         if (currentDemo != nullptr)
         {
             addAndMakeVisible (currentDemo);
-            startTimerHz (60);
             resized();
         }
     }
@@ -773,6 +765,11 @@ public:
 
 private:
     GraphicsDemoBase* currentDemo = nullptr;
+    VBlankAttachment vblank { this, [&]
+    {
+        if (currentDemo != nullptr)
+            currentDemo->repaint();
+    }};
 };
 
 //==============================================================================
