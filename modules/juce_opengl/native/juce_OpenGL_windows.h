@@ -38,8 +38,7 @@ namespace juce
 extern ComponentPeer* createNonRepaintingEmbeddedWindowsPeer (Component&, Component* parent);
 
 //==============================================================================
-class OpenGLContext::NativeContext  : private ComponentPeer::ScaleFactorListener,
-                                      private AsyncUpdater
+class OpenGLContext::NativeContext  : private AsyncUpdater
 {
 public:
     NativeContext (Component& component,
@@ -47,7 +46,8 @@ public:
                    void* contextToShareWithIn,
                    bool /*useMultisampling*/,
                    OpenGLVersion version)
-        : sharedContext (contextToShareWithIn)
+        : safeComponent (&component),
+          sharedContext (contextToShareWithIn)
     {
         placeholderComponent.reset (new PlaceholderComponent (*this));
         createNativeWindow (component);
@@ -95,10 +95,6 @@ public:
         cancelPendingUpdate();
         renderContext.reset();
         dc.reset();
-
-        if (safeComponent != nullptr)
-            if (auto* peer = safeComponent->getTopLevelComponent()->getPeer())
-                peer->removeScaleFactorListener (this);
     }
 
     InitResult initialiseOnRenderThread (OpenGLContext& c)
@@ -315,7 +311,7 @@ private:
     };
 
     //==============================================================================
-    void nativeScaleFactorChanged (double newScaleFactor) override
+    void nativeScaleFactorChanged (double newScaleFactor)
     {
         if (approximatelyEqual (newScaleFactor, nativeScaleFactor)
             || safeComponent == nullptr)
@@ -330,6 +326,8 @@ private:
 
     void createNativeWindow (Component& component)
     {
+        safeComponent = &component;
+
         auto* topComp = component.getTopLevelComponent();
 
         {
@@ -341,11 +339,8 @@ private:
 
         if (auto* peer = topComp->getPeer())
         {
-            safeComponent = &component;
-
             nativeScaleFactor = peer->getPlatformScaleFactor();
             updateWindowPosition (peer->getAreaCoveredBy (component));
-            peer->addScaleFactorListener (this);
         }
 
         dc = { GetDC ((HWND) nativeWindow->getNativeHandle()),
@@ -440,6 +435,8 @@ private:
     void* sharedContext = nullptr;
     double nativeScaleFactor = 1.0;
     bool haveBuffersBeenSwapped = false;
+    NativeScaleFactorNotifier scaleFactorNotifier { safeComponent.getComponent(),
+                                                    [this] (auto x) { nativeScaleFactorChanged (x); } };
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NativeContext)
