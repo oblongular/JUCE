@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 def ndkVersionString = "28.1.13356709"
 
 android {
