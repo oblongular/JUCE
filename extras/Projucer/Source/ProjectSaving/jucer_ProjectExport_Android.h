@@ -858,20 +858,23 @@ private:
         MemoryOutputStream mo;
         mo.setNewLineString (getNewLineString());
 
-        mo << "    variantFilter { variant ->"            << newLine;
-        mo << "        def names = variant.flavors*.name" << newLine;
+        mo << "    androidComponents {" << newLine
+           << "        beforeVariants(selector().all(), { variant ->" << newLine
+           << "            variant.enabled = false" << newLine;
 
         for (ConstConfigIterator config (*this); config.next();)
         {
             auto& cfg = dynamic_cast<const AndroidBuildConfiguration&> (*config);
-
-            mo << "        if (names.contains (\"" << cfg.getProductFlavourNameIdentifier() << "\")"                  << newLine;
-            mo << "              && variant.buildType.name != \"" << (cfg.isDebug() ? "debug" : "release") << "\") {" << newLine;
-            mo << "            setIgnore(true)"                                                                       << newLine;
-            mo << "        }"                                                                                         << newLine;
+            mo << "            variant.enabled |= variant.productFlavors*.second.contains (\""
+               << cfg.getProductFlavourNameIdentifier()
+               << "\") && variant.buildType == \""
+               << (cfg.isDebug() ? "debug" : "release")
+               << '"'
+               << newLine;
         }
 
-        mo << "    }" << newLine;
+        mo << "        })" << newLine
+           << "    }" << newLine;
 
         return mo.toString();
     }

@@ -77,16 +77,12 @@ android {
         }
     }
 
-    variantFilter { variant ->
-        def names = variant.flavors*.name
-        if (names.contains ("debug_")
-              && variant.buildType.name != "debug") {
-            setIgnore(true)
-        }
-        if (names.contains ("release_")
-              && variant.buildType.name != "release") {
-            setIgnore(true)
-        }
+    androidComponents {
+        beforeVariants(selector().all(), { variant ->
+            variant.enabled = false
+            variant.enabled |= variant.productFlavors*.second.contains ("debug_") && variant.buildType == "debug"
+            variant.enabled |= variant.productFlavors*.second.contains ("release_") && variant.buildType == "release"
+        })
     }
 
     sourceSets {
