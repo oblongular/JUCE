@@ -701,30 +701,30 @@ private:
         // NDK 26 is required for ANDROID_WEAK_API_DEFS, which is in turn required for weak-linking AFontMatcher
         mo << "def ndkVersionString = \"28.1.13356709\"" << newLine << newLine;
 
-        mo << "android {"                                                                    << newLine;
-        mo << "    compileSdk " << static_cast<int> (androidTargetSDK.get())                 << newLine;
-        mo << "    ndkVersion ndkVersionString"                                              << newLine;
-        mo << "    namespace " << project.getBundleIdentifierString().toLowerCase().quoted() << newLine;
-        mo << "    externalNativeBuild {"                                                    << newLine;
-        mo << "        cmake {"                                                              << newLine;
-        mo << "            path \"CMakeLists.txt\""                                          << newLine;
-        mo << "            version \"3.22.1\""                                               << newLine;
-        mo << "        }"                                                                    << newLine;
-        mo << "    }"                                                                        << newLine;
+        mo << "android {"                                                                      << newLine;
+        mo << "    compileSdk " << static_cast<int> (androidTargetSDK.get())                   << newLine;
+        mo << "    ndkVersion ndkVersionString"                                                << newLine;
+        mo << "    namespace " << project.getBundleIdentifierString().toLowerCase().quoted()   << newLine;
+        mo << "    externalNativeBuild {"                                                      << newLine;
+        mo << "        cmake {"                                                                << newLine;
+        mo << "            path \"CMakeLists.txt\""                                            << newLine;
+        mo << "            version \"3.22.1\""                                                 << newLine;
+        mo << "        }"                                                                      << newLine;
+        mo << "    }"                                                                          << newLine;
 
-        mo << getAndroidSigningConfig()                                                      << newLine;
-        mo << getAndroidDefaultConfig()                                                      << newLine;
-        mo << getAndroidBuildTypes()                                                         << newLine;
-        mo << getAndroidProductFlavours()                                                    << newLine;
-        mo << getAndroidVariantFilter()                                                      << newLine;
+        mo << getAndroidSigningConfig()                                                        << newLine;
+        mo << getAndroidDefaultConfig()                                                        << newLine;
+        mo << getAndroidBuildTypes()                                                           << newLine;
+        mo << getAndroidProductFlavours()                                                      << newLine;
+        mo << getAndroidVariantFilter()                                                        << newLine;
 
-        mo << getAndroidJavaSourceSets (modules)                                             << newLine;
-        mo << getAndroidRepositories()                                                       << newLine;
-        mo << getAndroidDependencies()                                                       << newLine;
-        mo << androidCustomAppBuildGradleContent.get().toString()                            << newLine;
-        mo << getApplyPlugins()                                                              << newLine;
+        mo << getAndroidJavaSourceSets (modules)                                               << newLine;
+        mo << getAndroidRepositories()                                                         << newLine;
+        mo << getAndroidDependencies()                                                         << newLine;
+        mo << androidCustomAppBuildGradleContent.get().toString()                              << newLine;
+        mo << getApplyPlugins()                                                                << newLine;
 
-        mo << "}"                                                                            << newLine << newLine;
+        mo << "}"                                                                              << newLine << newLine;
 
         return mo.toString();
     }
