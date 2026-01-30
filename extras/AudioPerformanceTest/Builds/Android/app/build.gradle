@@ -3,13 +3,13 @@ apply plugin: 'com.android.application'
 def ndkVersionString = "28.1.13356709"
 
 android {
-    compileSdk 35
-    ndkVersion ndkVersionString
-    namespace "com.juce.audioperformancetest"
+    compileSdk = 35
+    ndkVersion = ndkVersionString
+    namespace = "com.juce.audioperformancetest"
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
-            version "3.22.1"
+            version = "3.22.1"
         }
     }
     signingConfigs {
@@ -38,13 +38,13 @@ android {
              initWith debug
              debuggable    true
              jniDebuggable true
-             signingConfig signingConfigs.juceSigning
+             signingConfig = signingConfigs.juceSigning
          }
          release {
              initWith release
              debuggable    false
              jniDebuggable false
-             signingConfig signingConfigs.juceSigning
+             signingConfig = signingConfigs.juceSigning
          }
     }
 

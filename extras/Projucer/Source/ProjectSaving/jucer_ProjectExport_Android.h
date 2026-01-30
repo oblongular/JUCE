@@ -702,13 +702,13 @@ private:
         mo << "def ndkVersionString = \"28.1.13356709\"" << newLine << newLine;
 
         mo << "android {"                                                                      << newLine;
-        mo << "    compileSdk " << static_cast<int> (androidTargetSDK.get())                   << newLine;
-        mo << "    ndkVersion ndkVersionString"                                                << newLine;
-        mo << "    namespace " << project.getBundleIdentifierString().toLowerCase().quoted()   << newLine;
+        mo << "    compileSdk = " << static_cast<int> (androidTargetSDK.get())                 << newLine;
+        mo << "    ndkVersion = ndkVersionString"                                              << newLine;
+        mo << "    namespace = " << project.getBundleIdentifierString().toLowerCase().quoted() << newLine;
         mo << "    externalNativeBuild {"                                                      << newLine;
         mo << "        cmake {"                                                                << newLine;
         mo << "            path \"CMakeLists.txt\""                                            << newLine;
-        mo << "            version \"3.22.1\""                                                 << newLine;
+        mo << "            version = \"3.22.1\""                                               << newLine;
         mo << "        }"                                                                      << newLine;
         mo << "    }"                                                                          << newLine;
 
@@ -844,7 +844,7 @@ private:
             mo << "             initWith " << (config->isDebug() ? "debug" : "release") << newLine;
             mo << "             debuggable    " << (config->isDebug() ? "true" : "false") << newLine;
             mo << "             jniDebuggable " << (config->isDebug() ? "true" : "false") << newLine;
-            mo << "             signingConfig signingConfigs.juceSigning" << newLine;
+            mo << "             signingConfig = signingConfigs.juceSigning" << newLine;
 
             mo << "         }" << newLine;
         }
