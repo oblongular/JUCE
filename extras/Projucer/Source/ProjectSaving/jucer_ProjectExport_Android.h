@@ -1130,7 +1130,7 @@ private:
         props.add (new TextPropertyComponent (androidCustomAppBuildGradleContent, "Extra module's build.gradle content", 32768, true),
                    "Additional content to be appended to module's build.gradle inside android { section. ");
 
-        props.add (new TextPropertyComponent (androidGradleSettingsContent, "Custom gradle.settings content", 32768, true),
+        props.add (new TextPropertyComponent (androidGradleSettingsContent, "Custom settings.gradle content", 32768, true),
                    "You can customize the content of settings.gradle here");
 
         props.add (new ChoicePropertyComponent (androidScreenOrientation, "Screen Orientation",
