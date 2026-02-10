@@ -861,17 +861,17 @@ struct MenuWindow final : public Component
                                       (float) intBorder.getLeft(),
                                       (float) intBorder.getBottom(),
                                       (float) intBorder.getRight());
-        auto parentArea = display->userBounds.getIntersection (floatBorder.subtractedFrom (display->logicalBounds)).toNearestInt();
+        auto parentArea = display->userBounds.getIntersection (floatBorder.subtractedFrom (display->logicalBounds));
 
         if (auto* pc = options.getParentComponent())
         {
             return pc->getLocalArea (nullptr,
-                                     pc->getScreenBounds()
-                                           .reduced (getLookAndFeel().getPopupMenuBorderSizeWithOptions (options))
-                                           .getIntersection (parentArea));
+                                     pc->getScreenBounds().toFloat()
+                                           .reduced ((float) getLookAndFeel().getPopupMenuBorderSizeWithOptions (options))
+                                           .getIntersection (parentArea)).getLargestIntegerWithin();
         }
 
-        return parentArea;
+        return parentArea.toNearestInt();
     }
 
     void calculateWindowPos (Rectangle<int> target, const bool alignToRectangle)
