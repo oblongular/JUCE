@@ -616,17 +616,20 @@ private:
         const auto translation = (parentWindow != 0 ? (getPhysicalScreenPosition().toFloat() / translationScale).roundToInt() : Point<int>());
         const auto& desktop = Desktop::getInstance();
 
+        const auto prev = getPlatformScaleFactor();
+
         if (auto* display = desktop.getDisplays().getDisplayForRect (newBounds.translated (translation.x, translation.y),
                                                                      isPhysical))
         {
-            auto newScaleFactor = display->scale / desktop.getGlobalScaleFactor();
-
-            if (! approximatelyEqual (newScaleFactor, currentScaleFactor))
-            {
-                currentScaleFactor = newScaleFactor;
-                scaleFactorListeners.call ([&] (ScaleFactorListener& l) { l.nativeScaleFactorChanged (currentScaleFactor); });
-            }
+            currentScaleFactor = display->scale / desktop.getGlobalScaleFactor();
         }
+
+        const auto next = getPlatformScaleFactor();
+
+        if (approximatelyEqual (prev, next))
+            return;
+
+        scaleFactorListeners.call ([&] (ScaleFactorListener& l) { l.nativeScaleFactorChanged (next); });
     }
 
     void onVBlank()
