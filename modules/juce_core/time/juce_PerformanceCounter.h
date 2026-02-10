@@ -152,7 +152,7 @@ private:
 
     @tags{Core}
 */
-class JUCE_API  ScopedTimeMeasurement
+class JUCE_API [[nodiscard]] ScopedTimeMeasurement
 {
 public:
     ScopedTimeMeasurement (double& resultInSeconds) noexcept
