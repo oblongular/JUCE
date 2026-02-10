@@ -104,10 +104,8 @@ Rectangle<float> Displays::physicalToLogical (Rectangle<float> rect, const Displ
     if (display == nullptr)
         return rect;
 
-    auto globalScale = Desktop::getInstance().getGlobalScaleFactor();
-
-    return ((rect - display->physicalBounds.getTopLeft().toFloat()) / (display->scale / globalScale))
-            + (display->logicalBounds.getTopLeft() * globalScale);
+    return ((rect - display->physicalBounds.getTopLeft().toFloat()) / display->scale)
+            + display->logicalBounds.getTopLeft();
 }
 
 Rectangle<int> Displays::logicalToPhysical (Rectangle<int> rect, const Display* useScaleFactorOfDisplay) const noexcept
@@ -123,9 +121,7 @@ Rectangle<float> Displays::logicalToPhysical (Rectangle<float> rect, const Displ
     if (display == nullptr)
         return rect;
 
-    auto globalScale = Desktop::getInstance().getGlobalScaleFactor();
-
-    return ((rect.toFloat() - (display->logicalBounds.getTopLeft() * globalScale)) * (display->scale / globalScale))
+    return ((rect.toFloat() - display->logicalBounds.getTopLeft()) * display->scale)
              + display->physicalBounds.getTopLeft().toFloat();
 }
 
@@ -138,12 +134,10 @@ Point<ValueType> Displays::physicalToLogical (Point<ValueType> point, const Disp
     if (display == nullptr)
         return point;
 
-    auto globalScale = Desktop::getInstance().getGlobalScaleFactor();
+    const Point logicalTopLeft  (static_cast<ValueType> (display->logicalBounds.getX()),  static_cast<ValueType> (display->logicalBounds.getY()));
+    const Point physicalTopLeft (static_cast<ValueType> (display->physicalBounds.getX()), static_cast<ValueType> (display->physicalBounds.getY()));
 
-    const Point logicalTopLeft  { static_cast<ValueType> (display->logicalBounds .getX()), static_cast<ValueType> (display->logicalBounds .getY()) };
-    const Point physicalTopLeft { static_cast<ValueType> (display->physicalBounds.getX()), static_cast<ValueType> (display->physicalBounds.getY()) };
-
-    return ((point - physicalTopLeft) / (display->scale / globalScale)) + (logicalTopLeft * globalScale);
+    return ((point - physicalTopLeft) / display->scale) + logicalTopLeft;
 }
 
 template <typename ValueType>
@@ -155,12 +149,10 @@ Point<ValueType> Displays::logicalToPhysical (Point<ValueType> point, const Disp
     if (display == nullptr)
         return point;
 
-    auto globalScale = Desktop::getInstance().getGlobalScaleFactor();
+    const Point logicalTopLeft  (static_cast<ValueType> (display->logicalBounds.getX()),  static_cast<ValueType> (display->logicalBounds.getY()));
+    const Point physicalTopLeft (static_cast<ValueType> (display->physicalBounds.getX()), static_cast<ValueType> (display->physicalBounds.getY()));
 
-    const Point logicalTopLeft  { static_cast<ValueType> (display->logicalBounds .getX()), static_cast<ValueType> (display->logicalBounds .getY()) };
-    const Point physicalTopLeft { static_cast<ValueType> (display->physicalBounds.getX()), static_cast<ValueType> (display->physicalBounds.getY()) };
-
-    return ((point - (logicalTopLeft * globalScale)) * (display->scale / globalScale)) + physicalTopLeft;
+    return ((point - logicalTopLeft) * display->scale) + physicalTopLeft;
 }
 
 const Displays::Display* Displays::getPrimaryDisplay() const noexcept
