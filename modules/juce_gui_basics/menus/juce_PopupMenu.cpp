@@ -394,9 +394,48 @@ struct MenuWindow final : public Component
         // menu, because they *only* target the component that initiated the drag interaction.
         Desktop::getInstance().addGlobalMouseListener (this);
 
-        if (options.getParentComponent() == nullptr && parentWindow == nullptr && lf.shouldPopupMenuScaleWithTargetComponent (options))
-            if (auto* targetComponent = options.getTargetComponent())
-                scaleFactor = getApproximateScaleFactorForComponent (targetComponent);
+        scaleFactor = std::invoke ([&]
+        {
+            if (options.getParentComponent() != nullptr)
+                return scaleFactor;
+
+            if (parentWindow != nullptr)
+                return scaleFactor;
+
+            if (! lf.shouldPopupMenuScaleWithTargetComponent (options))
+                return scaleFactor;
+
+            auto* targetComponent = options.getTargetComponent();
+
+            if (targetComponent == nullptr)
+                return scaleFactor;
+
+            const auto baseScale = getApproximateScaleFactorForComponent (targetComponent);
+            const auto targetScale = std::invoke ([&]
+            {
+                if (auto* targetPeer = targetComponent->getPeer())
+                    return targetPeer->getPlatformScaleFactor();
+
+                return 1.0;
+            });
+
+            // Move the menu window's peer to the screen where it will display so that we can
+            // retrieve the peer's native scale there.
+            // The final position will be computed and applied later on.
+
+            const ScopeGuard scope { [this, pos = getPosition()] { setTopLeftPosition (pos.x, pos.y); } };
+            setTopLeftPosition (options.getTargetScreenArea().getCentre());
+
+            const auto selfScale = std::invoke ([&]
+            {
+                if (auto* selfPeer = getPeer())
+                    return (float) selfPeer->getPlatformScaleFactor();
+
+                return 1.0f;
+            });
+
+            return baseScale * (float) targetScale / (float) selfScale;
+        });
 
         setOpaque (lf.findColour (backgroundColourId).isOpaque()
                      || ! Desktop::canUseSemiTransparentWindows());
