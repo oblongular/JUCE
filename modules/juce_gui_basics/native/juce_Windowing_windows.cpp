@@ -5087,7 +5087,7 @@ public:
 
     void onVBlank() override
     {
-        if (peer.isSizing())
+        if (peer.isSizing() || std::exchange (schedulePaintOnVblank, false))
         {
             for (const auto& rect : deferredRepaints)
                 direct2DContext->addDeferredRepaint (rect);
@@ -5439,11 +5439,18 @@ private:
         //
         // Direct2DLowLevelGraphicsContext::endFrame calls ID2D1DeviceContext::EndDraw to finish painting
         // and then tells the swap chain to present the next swap chain back buffer.
-        if (auto* ctx = direct2DContext->startFrame ((float) peer.getPlatformScaleFactor()))
+
+        schedulePaintOnVblank = std::invoke ([&]
         {
-            peer.handlePaint (*ctx);
-            direct2DContext->endFrame();
-        }
+            if (auto* ctx = direct2DContext->startFrame ((float) peer.getPlatformScaleFactor()))
+            {
+                peer.handlePaint (*ctx);
+                direct2DContext->endFrame();
+                return false;
+            }
+
+            return true;
+        });
 
        #if JUCE_DIRECT2D_METRICS
         if (lastPaintStartTicks > 0)
@@ -5473,6 +5480,7 @@ private:
     std::unique_ptr<WrappedD2DHwndContextBase> direct2DContext = getContextForPeer (peer);
     UpdateRegion updateRegion;
     RectangleList<int> deferredRepaints;
+    bool schedulePaintOnVblank = false;
 
    #if JUCE_ETW_TRACELOGGING
     struct ETWEventProvider
