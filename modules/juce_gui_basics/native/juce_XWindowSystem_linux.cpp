@@ -1784,13 +1784,13 @@ std::optional<unsigned long> XWindowSystem::setBounds (::Window windowH, Rectang
             X11Symbols::getInstance()->xSetWMNormalHints (display, windowH, hints.get());
         }
 
-        const auto nativeWindowBorder = [&]() -> BorderSize<int>
+        const auto nativeWindowBorder = std::invoke ([&]() -> BorderSize<int>
         {
             if (const auto& frameSize = peer->getFrameSizeIfPresent())
                 return frameSize->multipliedBy (peer->getPlatformScaleFactor());
 
             return {};
-        }();
+        });
 
         const auto serial = X11Symbols::getInstance()->xNextRequest (display);
         X11Symbols::getInstance()->xMoveResizeWindow (display, windowH,
@@ -1880,8 +1880,8 @@ void XWindowSystem::updateConstraints (::Window windowH, ComponentPeer& peer) co
     {
         if ((peer.getStyleFlags() & ComponentPeer::windowIsResizable) == 0)
         {
-            hints->min_width  = hints->max_width  = peer.getBounds().getWidth();
-            hints->min_height = hints->max_height = peer.getBounds().getHeight();
+            hints->min_width  = hints->max_width  = (int) (peer.getPlatformScaleFactor() * peer.getBounds().getWidth());
+            hints->min_height = hints->max_height = (int) (peer.getPlatformScaleFactor() * peer.getBounds().getHeight());
             hints->flags = PMinSize | PMaxSize;
         }
         else if (auto* c = peer.getConstrainer())

@@ -168,7 +168,7 @@ public:
         const auto& displays = Desktop::getInstance().getDisplays();
         const auto logicalPos = displays.physicalToLogical (Point ((int) clientMsg.data.l[2] >> 16,
                                                                    (int) clientMsg.data.l[2] & 0xffff).toFloat());
-        const auto dropPos = detail::ScalingHelpers::screenPosToLocalPos (peer->getComponent(), logicalPos.toFloat()).roundToInt();
+        const auto dropPos = detail::ScalingHelpers::screenPosToLocalPos (peer->getComponent(), logicalPos).roundToInt();
 
         const auto& atoms = getAtoms();
 
