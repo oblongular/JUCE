@@ -68,7 +68,7 @@ struct PopupMenu::HelperClasses
 class MouseSourceState;
 struct MenuWindow;
 
-static bool canBeTriggered (const PopupMenu::Item& item) noexcept
+static bool canBeTriggered (const Item& item) noexcept
 {
     return item.isEnabled
         && item.itemID != 0
@@ -76,7 +76,7 @@ static bool canBeTriggered (const PopupMenu::Item& item) noexcept
         && (item.customComponent == nullptr || item.customComponent->isTriggeredAutomatically());
 }
 
-static bool hasActiveSubMenu (const PopupMenu::Item& item) noexcept
+static bool hasActiveSubMenu (const Item& item) noexcept
 {
     return item.isEnabled
         && item.subMenu != nullptr
@@ -84,7 +84,7 @@ static bool hasActiveSubMenu (const PopupMenu::Item& item) noexcept
 }
 
 //==============================================================================
-struct HeaderItemComponent final : public PopupMenu::CustomComponent
+struct HeaderItemComponent final : public CustomComponent
 {
     HeaderItemComponent (const String& name, const Options& opts)
         : CustomComponent (false), options (opts)
@@ -122,7 +122,7 @@ struct HeaderItemComponent final : public PopupMenu::CustomComponent
 //==============================================================================
 struct ItemComponent final : public Component
 {
-    ItemComponent (const PopupMenu::Item& i, const PopupMenu::Options& o, MenuWindow& parent)
+    ItemComponent (const Item& i, const Options& o, MenuWindow& parent)
         : item (i), parentWindow (parent), options (o), customComp (i.customComponent)
     {
         if (item.isSectionHeader)
@@ -206,12 +206,12 @@ struct ItemComponent final : public Component
         }
     }
 
-    static bool isAccessibilityHandlerRequired (const PopupMenu::Item& item)
+    static bool isAccessibilityHandlerRequired (const Item& item)
     {
         return item.isSectionHeader || hasActiveSubMenu (item) || canBeTriggered (item);
     }
 
-    PopupMenu::Item item;
+    Item item;
 
 private:
     //==============================================================================
@@ -299,7 +299,7 @@ private:
 
     //==============================================================================
     MenuWindow& parentWindow;
-    const PopupMenu::Options& options;
+    const Options& options;
     // NB: we use a copy of the one from the item info in case we're using our own section comp
     ReferenceCountedObjectPtr<CustomComponent> customComp;
     bool isHighlighted = false;
@@ -396,9 +396,9 @@ struct MenuWindow final : public Component
 
         if (options.getParentComponent() == nullptr && parentWindow == nullptr && lf.shouldPopupMenuScaleWithTargetComponent (options))
             if (auto* targetComponent = options.getTargetComponent())
-                scaleFactor = Component::getApproximateScaleFactorForComponent (targetComponent);
+                scaleFactor = getApproximateScaleFactorForComponent (targetComponent);
 
-        setOpaque (lf.findColour (PopupMenu::backgroundColourId).isOpaque()
+        setOpaque (lf.findColour (backgroundColourId).isOpaque()
                      || ! Desktop::canUseSemiTransparentWindows());
 
         const auto initialSelectedId = options.getInitiallySelectedItemId();
@@ -520,7 +520,7 @@ struct MenuWindow final : public Component
 
     //==============================================================================
     // hide this and all sub-comps
-    void hide (const PopupMenu::Item* item, bool makeInvisible)
+    void hide (const Item* item, bool makeInvisible)
     {
         if (isVisible())
         {
@@ -555,7 +555,7 @@ struct MenuWindow final : public Component
         }
     }
 
-    static int getResultItemID (const PopupMenu::Item* item)
+    static int getResultItemID (const Item* item)
     {
         if (item == nullptr)
             return 0;
@@ -567,7 +567,7 @@ struct MenuWindow final : public Component
         return item->itemID;
     }
 
-    void dismissMenu (const PopupMenu::Item* item)
+    void dismissMenu (const Item* item)
     {
         if (parent != nullptr)
         {
@@ -1667,10 +1667,10 @@ private:
 };
 
 //==============================================================================
-struct NormalComponentWrapper final : public PopupMenu::CustomComponent
+struct NormalComponentWrapper final : public CustomComponent
 {
     NormalComponentWrapper (Component& comp, int w, int h, bool triggerMenuItemAutomaticallyWhenClicked)
-        : PopupMenu::CustomComponent (triggerMenuItemAutomaticallyWhenClicked),
+        : CustomComponent (triggerMenuItemAutomaticallyWhenClicked),
           width (w), height (h)
     {
         addAndMakeVisible (comp);
@@ -2435,7 +2435,7 @@ bool PopupMenu::MenuItemIterator::next()
     if (index.size() == 0 || menus.getLast()->items.size() == 0)
         return false;
 
-    currentItem = const_cast<PopupMenu::Item*> (&(menus.getLast()->items.getReference (index.getLast())));
+    currentItem = const_cast<Item*> (&(menus.getLast()->items.getReference (index.getLast())));
 
     if (searchRecursively && currentItem->subMenu != nullptr)
     {
@@ -2459,7 +2459,7 @@ bool PopupMenu::MenuItemIterator::next()
     return true;
 }
 
-PopupMenu::Item& PopupMenu::MenuItemIterator::getItem() const
+auto PopupMenu::MenuItemIterator::getItem() const -> Item&
 {
     jassert (currentItem != nullptr);
     return *(currentItem);
