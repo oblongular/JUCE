@@ -99,7 +99,7 @@ public:
 
     InitResult initialiseOnRenderThread (OpenGLContext& c)
     {
-        threadAwarenessSetter = std::make_unique<ScopedThreadDPIAwarenessSetter> (nativeWindow->getNativeHandle());
+        threadAwarenessSetter.emplace (nativeWindow->getNativeHandle());
         context = &c;
 
         if (sharedContext != nullptr)
@@ -128,7 +128,7 @@ public:
     {
         deactivateCurrentContext();
         context = nullptr;
-        threadAwarenessSetter = nullptr;
+        threadAwarenessSetter.reset();
     }
 
     static void deactivateCurrentContext()  { wglMakeCurrent (nullptr, nullptr); }
@@ -444,7 +444,7 @@ private:
     CriticalSection mutex;
     std::unique_ptr<PlaceholderComponent> placeholderComponent;
     std::unique_ptr<ComponentPeer> nativeWindow;
-    std::unique_ptr<ScopedThreadDPIAwarenessSetter> threadAwarenessSetter;
+    std::optional<ScopedThreadDPIAwarenessSetter> threadAwarenessSetter;
     Component::SafePointer<Component> safeComponent;
     std::unique_ptr<std::remove_pointer_t<HGLRC>, RenderContextDeleter> renderContext;
     std::unique_ptr<std::remove_pointer_t<HDC>, DeviceContextDeleter> dc;

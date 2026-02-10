@@ -54,14 +54,7 @@ public:
         if (comp->isOnDesktop())
         {
            #if JUCE_WINDOWS
-            const auto scope = [&]() -> std::optional<ScopedThreadDPIAwarenessSetter>
-            {
-                if (comp != nullptr)
-                    if (auto* handle = comp->getWindowHandle())
-                        return ScopedThreadDPIAwarenessSetter (handle);
-
-                return {};
-            }();
+            const ScopedThreadDPIAwarenessSetter scope { comp != nullptr ? comp->getWindowHandle() : nullptr };
            #endif
 
             setSize (1, 1); // to keep the OS happy by not having zero-size windows

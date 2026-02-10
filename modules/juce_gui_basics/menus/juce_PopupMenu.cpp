@@ -2147,14 +2147,14 @@ Component* PopupMenu::createWindow (const Options& options,
                                     ApplicationCommandManager** managerOfChosenCommand) const
 {
    #if JUCE_WINDOWS
-    const auto scope = [&]() -> std::unique_ptr<ScopedThreadDPIAwarenessSetter>
+    const auto handle = std::invoke ([&]() -> void*
     {
         if (auto* target = options.getTargetComponent())
-            if (auto* handle = target->getWindowHandle())
-                return std::make_unique<ScopedThreadDPIAwarenessSetter> (handle);
+            return target->getWindowHandle();
 
         return nullptr;
-    }();
+    });
+    const ScopedThreadDPIAwarenessSetter scope { handle };
    #endif
 
     return items.isEmpty() ? nullptr
