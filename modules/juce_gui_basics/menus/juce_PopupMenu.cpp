@@ -855,7 +855,7 @@ struct MenuWindow final : public Component
         if (relativeTo != nullptr)
             targetPoint = relativeTo->localPointToGlobal (targetPoint);
 
-        auto* display = Desktop::getInstance().getDisplays().getDisplayForPoint (targetPoint * scaleFactor);
+        auto* display = Desktop::getInstance().getDisplays().getDisplayForPoint (targetPoint.toFloat() * scaleFactor);
         const auto intBorder = display->safeAreaInsets;
         const BorderSize floatBorder ((float) intBorder.getTop(),
                                       (float) intBorder.getLeft(),

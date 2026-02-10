@@ -212,7 +212,15 @@ public:
 
         If the Point lies outside all the displays then the nearest one will be returned.
     */
+    [[deprecated ("Prefer the Point<float> overload")]]
     const Display* getDisplayForPoint (Point<int> point, bool isPhysical = false) const noexcept;
+
+    /** Returns the Display object representing the display containing a given Point (either
+        in logical or physical pixels), or nullptr if there are no connected displays.
+
+        If the Point lies outside all the displays then the nearest one will be returned.
+    */
+    const Display* getDisplayForPoint (Point<float> point, bool isPhysical = false) const noexcept;
 
     /** Returns the Display object representing the display acting as the user's main screen, or nullptr
         if there are no connected displays.

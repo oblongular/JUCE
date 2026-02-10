@@ -67,19 +67,19 @@ const Displays::Display* Displays::getDisplayForRect (Rectangle<int> rect, bool 
     return foundDisplay;
 }
 
-const Displays::Display* Displays::getDisplayForPoint (Point<int> point, bool isPhysical) const noexcept
+auto Displays::getDisplayForPoint (Point<float> point, bool isPhysical) const noexcept -> const Display*
 {
-    auto minDistance = std::numeric_limits<int>::max();
+    auto minDistance = std::numeric_limits<float>::max();
     const Display* foundDisplay = nullptr;
 
     for (auto& display : displays)
     {
-        const auto displayArea = isPhysical ? display.physicalBounds : display.logicalBounds.toNearestInt();
+        const auto displayArea = isPhysical ? display.physicalBounds.toFloat() : display.logicalBounds;
 
         if (displayArea.contains (point))
             return &display;
 
-        auto distance = displayArea.getCentre().getDistanceFrom (point);
+        const auto distance = displayArea.getCentre().getDistanceFrom (point);
 
         if (distance <= minDistance)
         {
@@ -89,6 +89,11 @@ const Displays::Display* Displays::getDisplayForPoint (Point<int> point, bool is
     }
 
     return foundDisplay;
+}
+
+const Displays::Display* Displays::getDisplayForPoint (Point<int> point, bool isPhysical) const noexcept
+{
+    return getDisplayForPoint (point.toFloat(), isPhysical);
 }
 
 Rectangle<int> Displays::physicalToLogical (Rectangle<int> rect, const Display* useScaleFactorOfDisplay) const noexcept
@@ -129,7 +134,7 @@ template <typename ValueType>
 Point<ValueType> Displays::physicalToLogical (Point<ValueType> point, const Display* useScaleFactorOfDisplay) const noexcept
 {
     const auto* display = useScaleFactorOfDisplay != nullptr ? useScaleFactorOfDisplay
-                                                             : getDisplayForPoint (point.roundToInt(), true);
+                                                             : getDisplayForPoint (point.toFloat(), true);
 
     if (display == nullptr)
         return point;
@@ -144,7 +149,7 @@ template <typename ValueType>
 Point<ValueType> Displays::logicalToPhysical (Point<ValueType> point, const Display* useScaleFactorOfDisplay)  const noexcept
 {
     const auto* display = useScaleFactorOfDisplay != nullptr ? useScaleFactorOfDisplay
-                                                             : getDisplayForPoint (point.roundToInt(), false);
+                                                             : getDisplayForPoint (point.toFloat(), false);
 
     if (display == nullptr)
         return point;
@@ -246,7 +251,7 @@ struct DisplayNode
 /** Recursive - will calculate and set the logicalArea member of current. */
 static void processDisplay (DisplayNode* currentNode, Array<DisplayNode>& allNodes)
 {
-    const auto physicalArea = currentNode->display->logicalBounds.toDouble();
+    const auto physicalArea = currentNode->display->physicalBounds.toDouble();
     const auto scale = currentNode->display->scale;
 
     if (! currentNode->isRoot)
@@ -283,7 +288,7 @@ static void processDisplay (DisplayNode* currentNode, Array<DisplayNode>& allNod
         if (node.parent != nullptr)
             continue;
 
-        const auto otherPhysicalArea = node.display->logicalBounds.toDouble();
+        const auto otherPhysicalArea = node.display->physicalBounds.toDouble();
 
         // If the displays are touching on any side
         if (approximatelyEqual (otherPhysicalArea.getX(), physicalArea.getRight())  || approximatelyEqual (otherPhysicalArea.getRight(),  physicalArea.getX())
@@ -321,7 +326,7 @@ void Displays::updateToLogical()
         auto& display = displays.getReference (0);
 
         display.logicalBounds = (display.logicalBounds.toDouble() / display.scale).toFloat();
-        display.userBounds    = (display.userBounds   .toDouble() / display.scale).toFloat();
+        display.userBounds = (display.userBounds.toDouble() / display.scale).toFloat();
 
         return;
     }
@@ -385,15 +390,6 @@ void Displays::updateToLogical()
     }
 }
 
-/** @cond */
-// explicit template instantiations
-template Point<int>   Displays::physicalToLogical (Point<int>,   const Display*) const noexcept;
-template Point<float> Displays::physicalToLogical (Point<float>, const Display*) const noexcept;
-
-template Point<int>   Displays::logicalToPhysical (Point<int>,   const Display*) const noexcept;
-template Point<float> Displays::logicalToPhysical (Point<float>, const Display*) const noexcept;
-/** @endcond */
-
 //==============================================================================
 // Deprecated methods
 const Displays::Display& Displays::getDisplayContaining (Point<int> position) const noexcept
@@ -432,7 +428,7 @@ const Displays::Display& Displays::findDisplayForRect (Rectangle<int> rect, bool
 
 const Displays::Display& Displays::findDisplayForPoint (Point<int> point, bool isPhysical) const noexcept
 {
-    if (auto* display = getDisplayForPoint (point, isPhysical))
+    if (auto* display = getDisplayForPoint (point.toFloat(), isPhysical))
         return *display;
 
     return emptyDisplay;
