@@ -856,7 +856,12 @@ struct MenuWindow final : public Component
             targetPoint = relativeTo->localPointToGlobal (targetPoint);
 
         auto* display = Desktop::getInstance().getDisplays().getDisplayForPoint (targetPoint * scaleFactor);
-        auto parentArea = display->userArea.getIntersection (display->safeAreaInsets.subtractedFrom (display->totalArea));
+        const auto intBorder = display->safeAreaInsets;
+        const BorderSize floatBorder ((float) intBorder.getTop(),
+                                      (float) intBorder.getLeft(),
+                                      (float) intBorder.getBottom(),
+                                      (float) intBorder.getRight());
+        auto parentArea = display->userBounds.getIntersection (floatBorder.subtractedFrom (display->logicalBounds)).toNearestInt();
 
         if (auto* pc = options.getParentComponent())
         {

@@ -230,7 +230,7 @@ public:
 
             if (shouldBeFullScreen)
                 r = usingNativeTitleBar ? XWindowSystem::getInstance()->getWindowBounds (windowH, parentWindow)
-                                        : Desktop::getInstance().getDisplays().getDisplayForRect (bounds)->userArea;
+                                        : Desktop::getInstance().getDisplays().getDisplayForRect (bounds)->userBounds.getSmallestIntegerContainer();
 
             if (! r.isEmpty())
                 setBounds (detail::ScalingHelpers::scaledScreenPosToUnscaled (component, r), shouldBeFullScreen);
@@ -652,7 +652,7 @@ JUCE_API void JUCE_CALLTYPE Process::hide()                   {}
 void Desktop::setKioskComponent (Component* comp, bool enableOrDisable, bool)
 {
     if (enableOrDisable)
-        comp->setBounds (getDisplays().getDisplayForRect (comp->getScreenBounds())->totalArea);
+        comp->setBounds (getDisplays().getDisplayForRect (comp->getScreenBounds())->logicalBounds.getSmallestIntegerContainer());
 }
 
 void Displays::findDisplays (const Desktop& desktop)

@@ -51,21 +51,33 @@ public:
     /** Represents a connected display device. */
     struct JUCE_API  Display
     {
+        JUCE_BEGIN_IGNORE_DEPRECATION_WARNINGS
+        Display() = default;
+        Display (Display&&) noexcept = default;
+        Display (const Display&) = default;
+        Display& operator= (Display&&) noexcept = default;
+        Display& operator= (const Display&) = default;
+        JUCE_END_IGNORE_DEPRECATION_WARNINGS
+
         /** This will be true if this is the user's main display device. */
         bool isMain;
+
+        [[deprecated ("Use logicalBounds")]] Rectangle<int> totalArea;
 
         /** The total area of this display in logical pixels including any OS-dependent objects
             like the taskbar, menu bar, etc.
 
             On mobile (Android, iOS) this is the full area of the display.
         */
-        Rectangle<int> totalArea;
+        Rectangle<float> logicalBounds;
+
+        [[deprecated ("Use userBounds")]] Rectangle<int> userArea;
 
         /** The total area of this display in logical pixels which isn't covered by OS-dependent
             objects like the taskbar, menu bar, etc.
 
             On mobile (iOS, Android), the system UI will be made transparent whenever possible, and
-            the JUCE app may draw behind these bars. Therefore, on these platforms, the userArea
+            the JUCE app may draw behind these bars. Therefore, on these platforms, the userBounds
             is *not* restricted by the system UI. Instead, potentially-obscured areas of the
             display can be found by querying the safeAreaInsets and keyboardInsets.
 
@@ -74,7 +86,7 @@ public:
             area may be significantly smaller than the total screen area, but may overlap the
             system decorations.
         */
-        Rectangle<int> userArea;
+        Rectangle<float> userBounds;
 
         /** Represents the area of this display in logical pixels that is not functional for
             displaying content.
@@ -108,8 +120,10 @@ public:
         */
         BorderSize<int> keyboardInsets;
 
-        /** The top-left of this display in physical coordinates. */
-        Point<int> topLeftPhysical;
+        [[deprecated ("Use the top left of physicalBounds")]] Point<int> topLeftPhysical;
+
+        /** The full area of this display in physical pixels. */
+        Rectangle<int> physicalBounds;
 
         /** The scale factor of this display.
 
@@ -234,7 +248,7 @@ private:
 
     void init (const Desktop&);
     void findDisplays (const Desktop& desktop);
-
+    void updateDeprecatedFields();
     void updateToLogical();
 
     Display emptyDisplay;

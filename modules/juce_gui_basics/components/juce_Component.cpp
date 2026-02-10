@@ -994,7 +994,7 @@ int Component::getParentHeight() const noexcept
 
 Rectangle<int> Component::getParentMonitorArea() const
 {
-    return Desktop::getInstance().getDisplays().getDisplayForRect (getScreenBounds())->userArea;
+    return Desktop::getInstance().getDisplays().getDisplayForRect (getScreenBounds())->userBounds.toNearestInt();
 }
 
 int Component::getScreenX() const                       { return getScreenPosition().x; }

@@ -1646,7 +1646,7 @@ public:
             // us.
             if (shouldBeFullScreen)
                 if (auto* display = Desktop::getInstance().getDisplays().getPrimaryDisplay())
-                    return display->userArea;
+                    return display->userBounds.getSmallestIntegerContainer();
 
             return lastNonFullscreenBounds.isEmpty() ? getBounds() : lastNonFullscreenBounds;
         });
@@ -2873,8 +2873,9 @@ void Displays::findDisplays (const Desktop& desktop)
     d.dpi = (d.scale * 160.f);
     d.scale *= desktop.getGlobalScaleFactor();
 
-    d.totalArea = Rectangle<int> (env->GetIntField (displayMetrics, AndroidDisplayMetrics.widthPixels),
-                                  env->GetIntField (displayMetrics, AndroidDisplayMetrics.heightPixels)) / d.scale;
+    d.physicalBounds = Rectangle (env->GetIntField (displayMetrics, AndroidDisplayMetrics.widthPixels),
+                                  env->GetIntField (displayMetrics, AndroidDisplayMetrics.heightPixels));
+    d.logicalBounds = d.physicalBounds.toFloat() / d.scale;
 
     LocalRef activity { getMainActivity() };
     LocalRef mainWindow { activity != nullptr
@@ -2907,18 +2908,18 @@ void Displays::findDisplays (const Desktop& desktop)
     {
         const LocalRef<jobject> windowMetrics (env->CallObjectMethod (windowManager, AndroidWindowManager30.getCurrentWindowMetrics));
         const LocalRef<jobject> bounds (env->CallObjectMethod (windowMetrics, AndroidWindowMetrics.getBounds));
-        d.userArea = (Rectangle<int>::leftTopRightBottom (env->GetIntField (bounds, AndroidRect.left),
-                                                          env->GetIntField (bounds, AndroidRect.top),
-                                                          env->GetIntField (bounds, AndroidRect.right),
-                                                          env->GetIntField (bounds, AndroidRect.bottom)) / d.scale);
+        d.userBounds = (Rectangle<int>::leftTopRightBottom (env->GetIntField (bounds, AndroidRect.left),
+                                                            env->GetIntField (bounds, AndroidRect.top),
+                                                            env->GetIntField (bounds, AndroidRect.right),
+                                                            env->GetIntField (bounds, AndroidRect.bottom)).toFloat() / d.scale);
     }
     else
     {
-        d.userArea = std::invoke ([&]
+        d.userBounds = std::invoke ([&]
         {
             // No content view yet; approximate with display size
             if (contentView == nullptr)
-                return d.totalArea;
+                return d.logicalBounds;
 
             const auto topLeft = AndroidComponentPeer::getViewLocationOnScreen (env, contentView);
 
@@ -2927,10 +2928,10 @@ void Displays::findDisplays (const Desktop& desktop)
             const auto contentSize = Rectangle { topLeft.x,
                                                  topLeft.y,
                                                  env->CallIntMethod (contentView, AndroidView.getWidth),
-                                                 env->CallIntMethod (contentView, AndroidView.getHeight) } / d.scale;
+                                                 env->CallIntMethod (contentView, AndroidView.getHeight) }.toFloat() / d.scale;
 
             if (contentSize.isEmpty())
-                return d.totalArea;
+                return d.logicalBounds;
 
             return contentSize;
         });

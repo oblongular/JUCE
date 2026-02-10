@@ -5821,7 +5821,7 @@ void Desktop::setKioskComponent (Component* kioskModeComp, bool enableOrDisable,
     }
 
     if (kioskModeComp != nullptr && enableOrDisable)
-        kioskModeComp->setBounds (getDisplays().getDisplayForRect (kioskModeComp->getScreenBounds())->totalArea);
+        kioskModeComp->setBounds (getDisplays().getDisplayForRect (kioskModeComp->getScreenBounds())->logicalBounds.getSmallestIntegerContainer());
 }
 
 void Desktop::allowedOrientationsChanged() {}
@@ -5863,7 +5863,7 @@ static const Displays::Display* getCurrentDisplayFromScaleFactor (HWND hwnd)
 
         for (auto* d : candidateDisplays)
         {
-            auto intersection = d->totalArea.getIntersection (bounds);
+            auto intersection = d->logicalBounds.toNearestInt().getIntersection (bounds);
             auto area = intersection.getWidth() * intersection.getHeight();
 
             if (area > maxArea)
@@ -5978,8 +5978,8 @@ void Displays::findDisplays (const Desktop& desktop)
             d.scale = (d.dpi / USER_DEFAULT_SCREEN_DPI) * (masterScale / Desktop::getDefaultMasterScale());
         }
 
-        d.totalArea = D2DUtilities::toRectangle (monitor.totalAreaRect);
-        d.userArea  = D2DUtilities::toRectangle (monitor.workAreaRect);
+        d.logicalBounds = D2DUtilities::toRectangle (monitor.totalAreaRect).toFloat();
+        d.userBounds    = D2DUtilities::toRectangle (monitor.workAreaRect).toFloat();
 
         displays.add (d);
     }
@@ -5992,8 +5992,8 @@ void Displays::findDisplays (const Desktop& desktop)
     {
         for (auto& d : displays)
         {
-            d.totalArea /= masterScale;
-            d.userArea  /= masterScale;
+            d.logicalBounds /= masterScale;
+            d.userBounds    /= masterScale;
         }
     }
 }

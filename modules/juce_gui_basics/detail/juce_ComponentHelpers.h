@@ -198,7 +198,7 @@ struct ComponentHelpers
         if (auto* p = comp.getParentComponent())
             return p->getLocalBounds();
 
-        return Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+        return Desktop::getInstance().getDisplays().getPrimaryDisplay()->userBounds.toNearestInt();
     }
 
     static void releaseAllCachedImageResources (Component& c)

@@ -123,7 +123,7 @@ void ComponentBoundsConstrainer::setBoundsForComponent (Component* component,
         const auto globalBounds = component->localAreaToGlobal (targetBounds - component->getPosition());
 
         if (auto* display = Desktop::getInstance().getDisplays().getDisplayForPoint (globalBounds.getCentre()))
-            return component->getLocalArea (nullptr, display->userArea) + component->getPosition();
+            return component->getLocalArea (nullptr, display->userBounds).toNearestInt() + component->getPosition();
 
         const auto max = std::numeric_limits<int>::max();
         return { max, max };

@@ -257,7 +257,7 @@ private:
 
     void updateSize()
     {
-        const auto bounds = image.getScaledBounds().toNearestInt();
+        const auto bounds = image.getScaledBounds().getLargestIntegerWithin();
         setSize (bounds.getWidth(), bounds.getHeight());
     }
 
