@@ -1603,7 +1603,7 @@ public:
     Point<int> getScreenPosition() const
     {
         const auto physical = getViewLocationOnScreen (getEnv(), view.get());
-        return Desktop::getInstance().getDisplays().physicalToLogical (physical);
+        return Desktop::getInstance().getDisplays().physicalToLogical (physical.toFloat()).roundToInt();
     }
 
     Point<float> localToGlobal (Point<float> relativePosition) override

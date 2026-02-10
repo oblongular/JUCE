@@ -130,8 +130,7 @@ Rectangle<float> Displays::logicalToPhysical (Rectangle<float> rect, const Displ
              + display->physicalBounds.getTopLeft().toFloat();
 }
 
-template <typename ValueType>
-Point<ValueType> Displays::physicalToLogical (Point<ValueType> point, const Display* useScaleFactorOfDisplay) const noexcept
+Point<float> Displays::physicalToLogical (Point<float> point, const Display* useScaleFactorOfDisplay) const noexcept
 {
     const auto* display = useScaleFactorOfDisplay != nullptr ? useScaleFactorOfDisplay
                                                              : getDisplayForPoint (point.toFloat(), true);
@@ -139,14 +138,19 @@ Point<ValueType> Displays::physicalToLogical (Point<ValueType> point, const Disp
     if (display == nullptr)
         return point;
 
-    const Point logicalTopLeft  (static_cast<ValueType> (display->logicalBounds.getX()),  static_cast<ValueType> (display->logicalBounds.getY()));
-    const Point physicalTopLeft (static_cast<ValueType> (display->physicalBounds.getX()), static_cast<ValueType> (display->physicalBounds.getY()));
+    const auto logicalTopLeft = display->logicalBounds.getPosition();
+    const auto physicalTopLeft = display->physicalBounds.getPosition().toFloat();
 
     return ((point - physicalTopLeft) / display->scale) + logicalTopLeft;
 }
 
-template <typename ValueType>
-Point<ValueType> Displays::logicalToPhysical (Point<ValueType> point, const Display* useScaleFactorOfDisplay)  const noexcept
+Point<int> Displays::physicalToLogical (Point<int> physicalPoint,
+                                        const Display* display) const noexcept
+{
+    return physicalToLogical (physicalPoint.toFloat(), display).roundToInt();
+}
+
+Point<float> Displays::logicalToPhysical (Point<float> point, const Display* useScaleFactorOfDisplay)  const noexcept
 {
     const auto* display = useScaleFactorOfDisplay != nullptr ? useScaleFactorOfDisplay
                                                              : getDisplayForPoint (point.toFloat(), false);
@@ -154,10 +158,16 @@ Point<ValueType> Displays::logicalToPhysical (Point<ValueType> point, const Disp
     if (display == nullptr)
         return point;
 
-    const Point logicalTopLeft  (static_cast<ValueType> (display->logicalBounds.getX()),  static_cast<ValueType> (display->logicalBounds.getY()));
-    const Point physicalTopLeft (static_cast<ValueType> (display->physicalBounds.getX()), static_cast<ValueType> (display->physicalBounds.getY()));
+    const auto logicalTopLeft = display->logicalBounds.getPosition();
+    const auto physicalTopLeft = display->physicalBounds.getPosition().toFloat();
 
     return ((point - logicalTopLeft) * display->scale) + physicalTopLeft;
+}
+
+Point<int> Displays::logicalToPhysical (Point<int> physicalPoint,
+                                        const Display* display) const noexcept
+{
+    return logicalToPhysical (physicalPoint.toFloat(), display).roundToInt();
 }
 
 const Displays::Display* Displays::getPrimaryDisplay() const noexcept

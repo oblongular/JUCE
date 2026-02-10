@@ -138,16 +138,16 @@ public:
 
     Point<int> getScreenPosition (bool physical) const
     {
-        auto physicalParentPosition = XWindowSystem::getInstance()->getPhysicalParentScreenPosition();
-        auto parentPosition = parentWindow == 0 ? Desktop::getInstance().getDisplays().physicalToLogical (physicalParentPosition)
-                                                : physicalParentPosition / getPlatformScaleFactor();
+        auto physicalParentPosition = XWindowSystem::getInstance()->getPhysicalParentScreenPosition().toFloat();
+        auto parentPosition = (parentWindow == 0 ? Desktop::getInstance().getDisplays().physicalToLogical (physicalParentPosition)
+                                                 : physicalParentPosition / getPlatformScaleFactor()).roundToInt();
 
         auto screenBounds = parentWindow == 0 ? bounds
                                               : bounds.translated (parentPosition.x, parentPosition.y);
 
         if (physical)
-            return parentWindow == 0 ? Desktop::getInstance().getDisplays().logicalToPhysical (screenBounds.getTopLeft())
-                                     : screenBounds.getTopLeft() * getPlatformScaleFactor();
+            return (parentWindow == 0 ? Desktop::getInstance().getDisplays().logicalToPhysical (screenBounds.getTopLeft().toFloat())
+                                      : screenBounds.getTopLeft().toFloat() * getPlatformScaleFactor()).roundToInt();
 
         return screenBounds.getTopLeft();
     }

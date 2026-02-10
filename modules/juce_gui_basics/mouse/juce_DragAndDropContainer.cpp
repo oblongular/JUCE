@@ -343,14 +343,14 @@ private:
                 // mouse because the mouse does not move continuously in logical coordinate space.
 
                 const auto& displays = Desktop::getInstance().getDisplays();
-                const auto physicalPos = displays.logicalToPhysical (screenPos);
+                const auto physicalPos = displays.logicalToPhysical (screenPos.toFloat());
 
                 float scale = 1.0f;
 
                 if (auto* p = getPeer())
                     scale = (float) p->getPlatformScaleFactor();
 
-                return displays.physicalToLogical (physicalPos - (imageOffset * scale));
+                return displays.physicalToLogical (physicalPos - (imageOffset.toFloat() * scale)).roundToInt();
             }
            #endif
 

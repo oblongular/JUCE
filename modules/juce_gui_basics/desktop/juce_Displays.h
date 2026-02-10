@@ -187,18 +187,34 @@ public:
         If useScaleFactorOfDisplay is not null then its scale factor will be used for the conversion
         regardless of the display that the Point to be converted is on.
     */
-    template <typename ValueType>
-    Point<ValueType> physicalToLogical (Point<ValueType> physicalPoint,
-                                        const Display* useScaleFactorOfDisplay = nullptr) const noexcept;
+    Point<float> physicalToLogical (Point<float> physicalPoint,
+                                    const Display* useScaleFactorOfDisplay = nullptr) const noexcept;
+
+    /** Converts a Point from physical to logical pixels.
+
+        If useScaleFactorOfDisplay is not null then its scale factor will be used for the conversion
+        regardless of the display that the Point to be converted is on.
+    */
+    [[deprecated ("Prefer the Point<float> overload")]]
+    Point<int> physicalToLogical (Point<int> physicalPoint,
+                                  const Display* display = nullptr) const noexcept;
 
     /** Converts a Point from logical to physical pixels.
 
         If useScaleFactorOfDisplay is not null then its scale factor will be used for the conversion
         regardless of the display that the Point to be converted is on.
     */
-    template <typename ValueType>
-    Point<ValueType> logicalToPhysical (Point<ValueType> logicalPoint,
-                                        const Display* useScaleFactorOfDisplay = nullptr) const noexcept;
+    Point<float> logicalToPhysical (Point<float> logicalPoint,
+                                    const Display* useScaleFactorOfDisplay = nullptr) const noexcept;
+
+    /** Converts a Point from logical to physical pixels.
+
+        If useScaleFactorOfDisplay is not null then its scale factor will be used for the conversion
+        regardless of the display that the Point to be converted is on.
+    */
+    [[deprecated ("Prefer the Point<float> overload")]]
+    Point<int> logicalToPhysical (Point<int> physicalPoint,
+                                  const Display* display = nullptr) const noexcept;
 
     /** Returns the Display object representing the display containing a given Rectangle (either
         in logical or physical pixels), or nullptr if there are no connected displays.

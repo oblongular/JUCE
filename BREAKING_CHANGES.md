@@ -4,6 +4,29 @@
 
 ## Change
 
+The overloads of Displays::logicalToPhysical and Displays::physicalToLogical
+that take a Point<int> have been deprecated.
+
+**Possible Issues**
+
+Code that uses the deprecated functions may emit a warning at compile time.
+
+**Workaround**
+
+Use the new Point<float> overloads.
+
+**Rationale**
+
+When working in logical coordinate space, rounding coordinates to integer
+values loses precision and can be error-prone. This is especially the case for
+mouse coordinates: rounding the mouse position to logical coordinates and then
+back to physical can produce a different result, that might even lie outside
+the original display. This deprecation is intended to encourage users to avoid
+rounding logical coordinates unnecessarily.
+
+
+## Change
+
 The overload of Displays::getDisplayForPoint that takes a Point<int> has been
 deprecated.
 

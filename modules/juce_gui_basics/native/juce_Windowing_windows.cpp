@@ -558,8 +558,7 @@ static Rectangle<ValueType> convertLogicalScreenRectangleToPhysical (Rectangle<V
     return r;
 }
 
-template <typename ValueType>
-static Point<ValueType> convertPhysicalScreenPointToLogical (Point<ValueType> p, HWND h) noexcept
+static Point<float> convertPhysicalScreenPointToLogical (Point<float> p, HWND h) noexcept
 {
     if (isPerMonitorDPIAwareWindow (h))
         return Desktop::getInstance().getDisplays().physicalToLogical (p, getCurrentDisplayFromScaleFactor (h));
@@ -567,8 +566,7 @@ static Point<ValueType> convertPhysicalScreenPointToLogical (Point<ValueType> p,
     return p;
 }
 
-template <typename ValueType>
-static Point<ValueType> convertLogicalScreenPointToPhysical (Point<ValueType> p, HWND h) noexcept
+static Point<float> convertLogicalScreenPointToPhysical (Point<float> p, HWND h) noexcept
 {
     if (isPerMonitorDPIAwareWindow (h))
         return Desktop::getInstance().getDisplays().logicalToPhysical (p, getCurrentDisplayFromScaleFactor (h));
@@ -1429,7 +1427,7 @@ public:
                 return (bounds.toDouble() * getPlatformScaleFactor()).toNearestInt();
 
             return convertLogicalScreenRectangleToPhysical (bounds, hwnd)
-                    .withPosition (Desktop::getInstance().getDisplays().logicalToPhysical (bounds.getTopLeft()));
+                    .withPosition (Desktop::getInstance().getDisplays().logicalToPhysical (bounds.getTopLeft().toFloat()).roundToInt());
         }), isNowFullScreen);
     }
 
@@ -1469,7 +1467,7 @@ public:
 
     Point<int> getScreenPosition() const
     {
-        return convertPhysicalScreenPointToLogical (getClientRectInScreen().getPosition(), hwnd);
+        return convertPhysicalScreenPointToLogical (getClientRectInScreen().getPosition().toFloat(), hwnd).roundToInt();
     }
 
     Point<float> localToGlobal (Point<float> relativePosition) override
@@ -1853,7 +1851,7 @@ public:
         Point<float> getMousePos (POINTL mousePos) const
         {
             const auto originalPos = D2DUtilities::toPoint ({ mousePos.x, mousePos.y });
-            const auto logicalPos = convertPhysicalScreenPointToLogical (originalPos, peer.hwnd);
+            const auto logicalPos = convertPhysicalScreenPointToLogical (originalPos.toFloat(), peer.hwnd);
             return detail::ScalingHelpers::screenPosToLocalPos (peer.component, logicalPos.toFloat());
         }
 
@@ -2756,7 +2754,7 @@ private:
         if (peer == nullptr)
             peer = this;
 
-        return std::tuple (peer, peer->globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint (currentMousePos), hwnd).toFloat()));
+        return std::tuple (peer, peer->globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint (currentMousePos).toFloat(), hwnd).toFloat()));
     }
 
     static MouseInputSource::InputSourceType getPointerType (WPARAM wParam)
@@ -2868,7 +2866,7 @@ private:
         const auto touchIndex = currentTouches.getIndexOfTouch (this, touch.dwID);
         const auto time = getMouseEventTime();
         const auto pos = globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint ({ roundToInt (touch.x / 100.0f),
-                                                                                                      roundToInt (touch.y / 100.0f) }), hwnd).toFloat());
+                                                                                                      roundToInt (touch.y / 100.0f) }).toFloat(), hwnd).toFloat());
         const auto pressure = touchPressure;
         auto modsToSend = ModifierKeys::getCurrentModifiers();
 
@@ -2954,7 +2952,7 @@ private:
 
             const auto pressure = (penInfo.penMask & PEN_MASK_PRESSURE) ? (float) penInfo.pressure / 1024.0f : MouseInputSource::defaultPressure;
 
-            if (! handlePenInput (penInfo, globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint (getPOINTFromLParam (lParam)), hwnd).toFloat()),
+            if (! handlePenInput (penInfo, globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint (getPOINTFromLParam (lParam)).toFloat(), hwnd).toFloat()),
                                   pressure, isDown, isUp))
                 return false;
         }
@@ -3611,7 +3609,7 @@ private:
     Point<float> getLocalPointFromScreenLParam (LPARAM lParam)
     {
         const auto globalPos = D2DUtilities::toPoint (getPOINTFromLParam (lParam));
-        return globalToLocal (convertPhysicalScreenPointToLogical (globalPos, hwnd).toFloat());
+        return globalToLocal (convertPhysicalScreenPointToLogical (globalPos.toFloat(), hwnd).toFloat());
     }
 
     Point<float> getPointFromLocalLParam (LPARAM lParam) noexcept
@@ -3628,12 +3626,12 @@ private:
         const auto offset = p
                           + Point { (int) r.left, (int) r.top }
                           + Point { windowBorder.getLeft(), windowBorder.getTop() };
-        return globalToLocal (Desktop::getInstance().getDisplays().physicalToLogical (offset).toFloat());
+        return globalToLocal (Desktop::getInstance().getDisplays().physicalToLogical (offset.toFloat()));
     }
 
     Point<float> getCurrentMousePos() noexcept
     {
-        return globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint (getPOINTFromLParam ((LPARAM) GetMessagePos())), hwnd).toFloat());
+        return globalToLocal (convertPhysicalScreenPointToLogical (D2DUtilities::toPoint (getPOINTFromLParam ((LPARAM) GetMessagePos())).toFloat(), hwnd).toFloat());
     }
 
     static ModifierKeys getMouseModifiers()
@@ -3716,7 +3714,7 @@ private:
                             return result;
 
                     const auto physicalPoint = D2DUtilities::toPoint (getPOINTFromLParam (lParam));
-                    const auto logicalPoint = convertPhysicalScreenPointToLogical (physicalPoint, hwnd);
+                    const auto logicalPoint = convertPhysicalScreenPointToLogical (physicalPoint.toFloat(), hwnd);
                     const auto localPoint = globalToLocal (logicalPoint.toFloat());
                     const auto componentPoint = detail::ScalingHelpers::unscaledScreenPosToScaled (component, localPoint);
 
@@ -5674,24 +5672,22 @@ Point<float> MouseInputSource::getCurrentRawMousePosition()
     POINT mousePos;
     GetCursorPos (&mousePos);
 
-    auto p = D2DUtilities::toPoint (mousePos);
+    auto p = D2DUtilities::toPoint (mousePos).toFloat();
 
     if (isPerMonitorDPIAwareThread())
-        p = Desktop::getInstance().getDisplays().physicalToLogical (p);
+        return Desktop::getInstance().getDisplays().physicalToLogical (p);
 
-    return p.toFloat();
+    return p;
 }
 
 void MouseInputSource::setRawMousePosition (Point<float> newPosition)
 {
-    auto newPositionInt = newPosition.roundToInt();
-
    #if JUCE_WIN_PER_MONITOR_DPI_AWARE
     if (isPerMonitorDPIAwareThread())
-        newPositionInt = Desktop::getInstance().getDisplays().logicalToPhysical (newPositionInt);
+        newPosition = Desktop::getInstance().getDisplays().logicalToPhysical (newPosition);
    #endif
 
-    auto point = D2DUtilities::toPOINT (newPositionInt);
+    const auto point = D2DUtilities::toPOINT (newPosition.roundToInt());
     SetCursorPos (point.x, point.y);
 }
 
