@@ -833,7 +833,8 @@ private:
 };
 
 //==============================================================================
-struct VSTPluginInstanceHeadless : public AudioPluginInstance
+struct VSTPluginInstanceHeadless : public AudioPluginInstance,
+                                   private AudioPluginExtensions::VSTClient
 {
     struct VSTParameter final   : public Parameter
     {
@@ -1235,19 +1236,10 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance
         setLatencySamples (vstEffect->initialDelay);
     }
 
-    void getExtensions (ExtensionsVisitor& visitor) const override
-    {
-        struct Extensions final : public ExtensionsVisitor::VSTClient
-        {
-            explicit Extensions (const VSTPluginInstanceHeadless* instanceIn) : instance (instanceIn) {}
+          AudioPluginExtensions::VSTClient* getVSTClient()       override { return this; }
+    const AudioPluginExtensions::VSTClient* getVSTClient() const override { return this; }
 
-            AEffect* getAEffectPtr() const noexcept override   { return reinterpret_cast<AEffect*> (instance->vstEffect); }
-
-            const VSTPluginInstanceHeadless* instance = nullptr;
-        };
-
-        visitor.visitVSTClient (Extensions { this });
-    }
+    AEffect* getAEffectPtr() const noexcept override   { return reinterpret_cast<AEffect*> (vstEffect); }
 
     void* getPlatformSpecificData() override    { return vstEffect; }
 

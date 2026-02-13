@@ -46,7 +46,7 @@ JUCE_BEGIN_NO_SANITIZE ("vptr")
 bool VST3PluginFormatHeadless::setStateFromVSTPresetFile (AudioPluginInstance* api, const MemoryBlock& rawData)
 {
     if (auto vst3 = dynamic_cast<VST3PluginInstanceHeadless*> (api))
-        return vst3->setStateFromPresetFile (rawData);
+        return vst3->setPreset (rawData);
 
     return false;
 }

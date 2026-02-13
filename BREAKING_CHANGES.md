@@ -4,6 +4,28 @@
 
 ## Change
 
+The ExtensionsVisitor type has been removed.
+
+**Possible Issues**
+
+Code that references this type, e.g. by deriving from it, will fail to compile.
+
+**Workaround**
+
+Use the new member functions of AudioPluginInstance - getVSTClient(),
+getVST3Client(), getAudioUnitClient(), and getARAClient() - to interact with
+format-specific aspects of the wrapped plugin.
+
+**Rationale**
+
+The visitor pattern results in very boilerplate-heavy code, both for
+implementers and for users. The new API is much more lightweight. Additionally,
+the ExtensionsVisitor API was intended for advanced users who should be able to
+migrate to a new API without much difficulty.
+
+
+## Change
+
 The following member functions of Typeface have been removed:
 - Typeface::getStringWidth()
 - Typeface::getGlyphPositions()
