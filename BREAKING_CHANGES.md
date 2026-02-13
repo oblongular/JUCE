@@ -4,6 +4,35 @@
 
 ## Change
 
+The following functions have been removed:
+- VSTPluginFormatHeadless::getVSTXML()
+- VSTPluginFormatHeadless::loadFromFXBFile()
+- VSTPluginFormatHeadless::saveToFXBFile()
+- VSTPluginFormatHeadless::getChunkData()
+- VSTPluginFormatHeadless::setChunkData()
+- VSTPluginFormatHeadless::setExtraFunctions()
+- VSTPluginFormatHeadless::dispatcher()
+- VST3PluginFormatHeadless::setStateFromVSTPresetFile()
+
+**Possible Issues**
+
+Code that references these functions will fail to compile.
+
+**Workaround**
+
+Retrieve a client interface from an AudioPluginInstance by calling
+AudioPluginClient::getVSTClient() or AudioPluginClient::getVST3Client(), then
+call the appropriate member function on the client interface.
+
+**Rationale**
+
+This approach leads to more intuitive code. It's no longer necessary to call a
+static member function of the plugin format in order to interact with
+format-specific aspects of a particular plugin instance.
+
+
+## Change
+
 The ExtensionsVisitor type has been removed.
 
 **Possible Issues**

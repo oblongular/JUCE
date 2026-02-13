@@ -1727,7 +1727,15 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         return result;
     }
 
-    bool loadFromFXBFile (const void* const data, const size_t dataSize)
+    const XmlElement* getVSTXML() const override
+    {
+        if (vstModule != nullptr)
+            return vstModule->vstXml.get();
+
+        return nullptr;
+    }
+
+    bool loadFromFXBFile (const void* const data, const size_t dataSize) override
     {
         if (dataSize < 28)
             return false;
@@ -1819,15 +1827,16 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         return true;
     }
 
-    bool saveToFXBFile (MemoryBlock& dest, bool isFXB, int maxSizeMB = 128)
+    bool saveToFXBFile (MemoryBlock& dest, bool isFXB) override
     {
+        constexpr auto maxSizeMB = 128;
         auto numPrograms = getNumPrograms();
         auto numParams = getParameters().size();
 
         if (usesChunks())
         {
             MemoryBlock chunk;
-            getChunkData (chunk, ! isFXB, maxSizeMB);
+            getChunkDataImpl (chunk, ! isFXB, maxSizeMB);
 
             if (isFXB)
             {
@@ -1916,7 +1925,7 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
 
     bool usesChunks() const noexcept        { return vstEffect != nullptr && (vstEffect->flags & Vst2::effFlagsProgramChunks) != 0; }
 
-    bool getChunkData (MemoryBlock& mb, bool isPreset, int maxSizeMB) const
+    bool getChunkDataImpl (MemoryBlock& mb, bool isPreset, int maxSizeMB) const
     {
         if (usesChunks())
         {
@@ -1935,7 +1944,12 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         return false;
     }
 
-    bool setChunkData (const void* data, const int size, bool isPreset)
+    bool getChunkData (MemoryBlock& mb, bool isPreset) const override
+    {
+        return getChunkDataImpl (mb, isPreset, 128);
+    }
+
+    bool setChunkData (const void* data, const int size, bool isPreset) override
     {
         if (size > 0 && usesChunks())
         {
@@ -1948,6 +1962,20 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         }
 
         return false;
+    }
+
+    void setExtraFunctions (ExtraFunctions* functions) override
+    {
+        extraFunctions = rawToUniquePtr (functions);
+    }
+
+    pointer_sized_int dispatcher (int32 opcode,
+                                  int32 index,
+                                  pointer_sized_int value,
+                                  void* ptr,
+                                  float opt) override
+    {
+        return dispatch (opcode, index, value, ptr, opt);
     }
 
     virtual bool updateSizeFromEditor (int, int) { return false; }

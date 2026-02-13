@@ -104,6 +104,47 @@ struct AudioPluginExtensions
     {
         virtual ~VSTClient() = default;
         virtual AEffect* getAEffectPtr() const noexcept = 0;
+
+        /** Attempts to retrieve the VSTXML data from a plugin.
+            Will return nullptr if the plugin doesn't have any VSTXML.
+        */
+        virtual const XmlElement* getVSTXML() const = 0;
+
+        /** Attempts to reload a VST plugin's state from some FXB or FXP data. */
+        virtual bool loadFromFXBFile (const void* data, size_t dataSize) = 0;
+
+        /** Attempts to save a VST's state to some FXP or FXB data. */
+        virtual bool saveToFXBFile (MemoryBlock& result, bool asFXB) = 0;
+
+        /** Attempts to set a VST's state from a chunk of memory. */
+        virtual bool setChunkData (const void* data, int size, bool isPreset) = 0;
+
+        /** Attempts to get a VST's state as a chunk of memory. */
+        virtual bool getChunkData (MemoryBlock& result, bool isPreset) const = 0;
+
+        //==============================================================================
+        /** Base class for some extra functions that can be attached to a VST plugin instance. */
+        class ExtraFunctions
+        {
+        public:
+            virtual ~ExtraFunctions() {}
+
+            /** This should return 10000 * the BPM at this position in the current edit. */
+            virtual int64 getTempoAt (int64 samplePos) = 0;
+
+            /** This should return the host's automation state.
+                @returns 0 = not supported, 1 = off, 2 = read, 3 = write, 4 = read/write
+            */
+            virtual int getAutomationState() = 0;
+        };
+
+        /** Provides an ExtraFunctions callback object for a plugin to use.
+            The plugin will take ownership of the object and will delete it automatically.
+        */
+        virtual void setExtraFunctions (ExtraFunctions* functions) = 0;
+
+        /** This simply calls directly to the VST's AEffect::dispatcher() function. */
+        virtual pointer_sized_int dispatcher (int32, int32, pointer_sized_int, void*, float) = 0;
     };
 
     /** Can be used to retrieve information about a plugin that provides ARA extensions. */
