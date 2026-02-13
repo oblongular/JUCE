@@ -42,8 +42,6 @@ PluginDescription AudioPluginInstance::getPluginDescription() const
     return desc;
 }
 
-void* AudioPluginInstance::getPlatformSpecificData() { return nullptr; }
-
 String AudioPluginInstance::getParameterID (int parameterIndex)
 {
     assertOnceOnDeprecatedMethodUse();

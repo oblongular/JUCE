@@ -1167,7 +1167,6 @@ public:
     }
    #endif
 
-    void* getPlatformSpecificData() override             { return audioUnit; }
     const String getName() const override                { return pluginName; }
 
     double getTailLengthSeconds() const override

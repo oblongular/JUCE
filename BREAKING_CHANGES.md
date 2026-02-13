@@ -4,6 +4,25 @@
 
 ## Change
 
+AudioPluginInstance::getPlatformSpecificData() has been removed.
+
+**Possible Issues**
+
+Code that calls this function will fail to compile.
+
+**Workaround**
+
+Use the new member functions of AudioPluginInstance - getVSTClient(),
+getVST3Client(), getAudioUnitClient(), and getARAClient() - to retrieve data
+relating to the underlying implementation.
+
+**Rationale**
+
+This change allows calling code to be more self-documenting and type-safe.
+
+
+## Change
+
 The following functions have new signatures:
 - VSTPluginFormatHeadless::loadFromFXBFile()
 - VSTPluginFormatHeadless::setChunkData()

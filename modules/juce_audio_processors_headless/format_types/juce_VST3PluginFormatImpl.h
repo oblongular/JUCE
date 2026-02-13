@@ -2247,8 +2247,6 @@ public:
     }
    #endif
 
-    void* getPlatformSpecificData() override   { return holder->component.get(); }
-
     void updateMidiMappings()
     {
         // MIDI mappings will always be updated on the main thread, but we need to ensure

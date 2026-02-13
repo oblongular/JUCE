@@ -133,15 +133,6 @@ public:
     HostedParameter* getHostedParameter (int index) const;
 
     /** @cond */
-    /** Use the new typesafe visitor-based interface rather than this function.
-
-        Returns a pointer to some kind of platform-specific data about the plugin.
-        E.g. For a VST, this value can be cast to an AEffect*. For an AudioUnit, it can be
-        cast to an AudioUnit handle.
-    */
-    [[deprecated ("Use the new typesafe visitor-based interface rather than this function.")]]
-    virtual void* getPlatformSpecificData();
-
     // Rather than using these methods you should call the corresponding methods
     // on the AudioProcessorParameter objects returned from getParameters().
     // See the implementations of the methods below for some examples of how to

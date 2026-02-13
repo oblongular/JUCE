@@ -1241,8 +1241,6 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
 
     AEffect* getAEffectPtr() const noexcept override   { return reinterpret_cast<AEffect*> (vstEffect); }
 
-    void* getPlatformSpecificData() override    { return vstEffect; }
-
     const String getName() const override
     {
         if (vstEffect != nullptr)
