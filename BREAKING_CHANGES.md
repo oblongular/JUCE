@@ -4,6 +4,30 @@
 
 ## Change
 
+The following functions have new signatures:
+- VSTPluginFormatHeadless::loadFromFXBFile()
+- VSTPluginFormatHeadless::setChunkData()
+- VSTPluginFormatHeadless::setExtraFunctions()
+
+**Possible Issues**
+
+Code that calls these functions will fail to compile.
+
+**Workaround**
+
+Instead of passing a separate data pointer and size, pass a Span of bytes to
+loadFromFXBFile() and setChunkData().
+
+Pass a unique_ptr<ExtraFunctions> to setExtraFunctions(). You may wish to use
+rawToUniquePtr() to convert a raw pointer to a unique_ptr.
+
+**Rationale**
+
+These changes result in interfaces that are more self-documenting.
+
+
+## Change
+
 The following functions have been removed:
 - VSTPluginFormatHeadless::getVSTXML()
 - VSTPluginFormatHeadless::loadFromFXBFile()

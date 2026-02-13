@@ -1583,8 +1583,8 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
     void getStateInformation (MemoryBlock& mb) override                  { saveToFXBFile (mb, true); }
     void getCurrentProgramStateInformation (MemoryBlock& mb) override    { saveToFXBFile (mb, false); }
 
-    void setStateInformation (const void* data, int size) override               { loadFromFXBFile (data, (size_t) size); }
-    void setCurrentProgramStateInformation (const void* data, int size) override { loadFromFXBFile (data, (size_t) size); }
+    void setStateInformation (const void* data, int size) override               { loadFromFXBFile ({ static_cast<const std::byte*> (data), (size_t) size }); }
+    void setCurrentProgramStateInformation (const void* data, int size) override { loadFromFXBFile ({ static_cast<const std::byte*> (data), (size_t) size }); }
 
     //==============================================================================
     pointer_sized_int handleCallback (int32 opcode, int32 index, pointer_sized_int value, void* ptr, float opt)
@@ -1735,12 +1735,15 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         return nullptr;
     }
 
-    bool loadFromFXBFile (const void* const data, const size_t dataSize) override
+    bool loadFromFXBFile (Span<const std::byte> span) override
     {
+        const auto* data = span.data();
+        const auto dataSize = span.size();
+
         if (dataSize < 28)
             return false;
 
-        auto set = (const fxSet*) data;
+        auto set = unalignedPointerCast<const fxSet*> (data);
 
         if ((! compareMagic (set->chunkMagic, "CcnK")) || fxbSwap (set->version) > fxbVersionNum)
             return false;
@@ -1786,7 +1789,7 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         else if (compareMagic (set->fxMagic, "FxCk"))
         {
             // single program
-            auto prog = (const fxProgram*) data;
+            auto prog = unalignedPointerCast<const fxProgram*> (data);
 
             if (! compareMagic (prog->chunkMagic, "CcnK"))
                 return false;
@@ -1800,22 +1803,22 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         else if (compareMagic (set->fxMagic, "FBCh"))
         {
             // non-preset chunk
-            auto cset = (const fxChunkSet*) data;
+            auto cset = unalignedPointerCast <const fxChunkSet*> (data);
 
             if ((size_t) fxbSwap (cset->chunkSize) + sizeof (fxChunkSet) - 8 > (size_t) dataSize)
                 return false;
 
-            setChunkData (cset->chunk, fxbSwap (cset->chunkSize), false);
+            setChunkData ({ unalignedPointerCast<const std::byte*> (cset->chunk), (size_t) fxbSwap (cset->chunkSize) }, false);
         }
         else if (compareMagic (set->fxMagic, "FPCh"))
         {
             // preset chunk
-            auto cset = (const fxProgramSet*) data;
+            auto cset = unalignedPointerCast <const fxProgramSet*> (data);
 
             if ((size_t) fxbSwap (cset->chunkSize) + sizeof (fxProgramSet) - 8 > (size_t) dataSize)
                 return false;
 
-            setChunkData (cset->chunk, fxbSwap (cset->chunkSize), true);
+            setChunkData ({ unalignedPointerCast<const std::byte*> (cset->chunk), (size_t) fxbSwap (cset->chunkSize) }, true);
 
             changeProgramName (getCurrentProgram(), cset->name);
         }
@@ -1949,8 +1952,11 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         return getChunkDataImpl (mb, isPreset, 128);
     }
 
-    bool setChunkData (const void* data, const int size, bool isPreset) override
+    bool setChunkData (Span<const std::byte> span, bool isPreset) override
     {
+        const auto* data = span.data();
+        const auto size = (pointer_sized_int) span.size();
+
         if (size > 0 && usesChunks())
         {
             dispatch (Vst2::effSetChunk, isPreset ? 1 : 0, size, (void*) data, 0.0f);
@@ -1964,9 +1970,9 @@ struct VSTPluginInstanceHeadless : public AudioPluginInstance,
         return false;
     }
 
-    void setExtraFunctions (ExtraFunctions* functions) override
+    void setExtraFunctions (std::unique_ptr<ExtraFunctions> functions) override
     {
-        extraFunctions = rawToUniquePtr (functions);
+        extraFunctions = std::move (functions);
     }
 
     pointer_sized_int dispatcher (int32 opcode,
