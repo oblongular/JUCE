@@ -163,8 +163,8 @@ public:
 
     ~ScopedTimeMeasurement()
     {
-        static auto scaler = 1.0 / static_cast<double> (Time::getHighResolutionTicksPerSecond());
-        result = static_cast<double> (Time::getHighResolutionTicks() - startTimeTicks) * scaler;
+        const auto now = Time::getHighResolutionTicks();
+        result = Time::highResolutionTicksToSeconds (now - startTimeTicks);
     }
 
 private:
