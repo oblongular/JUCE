@@ -520,25 +520,30 @@ static HbDrawFuncs getPathDrawFuncs()
     return result;
 }
 
+static AffineTransform getGlyphUnitsToEmTransform (hb_font_t* font)
+{
+    const auto scale = 1.0f / (float) hb_face_get_upem (hb_font_get_face (font));
+    return AffineTransform::scale (scale, -scale);
+}
+
 void Typeface::getOutlineForGlyph (int glyphNumber, Path& path) const
 {
     auto* font = getNativeDetails()->getFont();
-    const auto scale = 1.0f / (float) hb_face_get_upem (hb_font_get_face (font));
-
     path = getGlyphPathInGlyphUnits ((hb_codepoint_t) glyphNumber, font);
-    path.applyTransform (AffineTransform::scale (scale, -scale));
+    path.applyTransform (getGlyphUnitsToEmTransform (font));
 }
 
 Rectangle<float> Typeface::getGlyphBounds (int glyphNumber) const
 {
-    const auto extents = getNativeDetails()->getGlyphExtents ((hb_codepoint_t) glyphNumber);
+    const auto* native = getNativeDetails();
+    const auto extents = native->getGlyphExtents ((hb_codepoint_t) glyphNumber);
 
     if (! extents.has_value())
         return {};
 
     return Rectangle { (float) extents->width, (float) extents->height }
             .withPosition ((float) extents->x_bearing, (float) extents->y_bearing)
-            .transformedBy (AffineTransform::scale (1.0f, -1.0f));
+            .transformedBy (getGlyphUnitsToEmTransform (native->getFont()));
 }
 
 static Colour makeColour (hb_color_t c)
@@ -626,8 +631,7 @@ std::vector<GlyphLayer> Typeface::getLayersForGlyph (int glyphNumber, const Affi
 {
     const auto native = getNativeDetails();
     auto* font = native->getFont();
-    const auto scale = 1.0f / (float) hb_face_get_upem (hb_font_get_face (font));
-    const auto combinedTransform = AffineTransform::scale (scale, -scale).followedBy (transform);
+    const auto combinedTransform = getGlyphUnitsToEmTransform (font).followedBy (transform);
 
     if (auto bitmapLayer = getBitmapLayer (*this, glyphNumber, combinedTransform); ! bitmapLayer.empty())
         return bitmapLayer;
@@ -642,7 +646,7 @@ std::vector<GlyphLayer> Typeface::getLayersForGlyph (int glyphNumber, const Affi
     // easily display. In such cases, we can use system facilities to render the glyph into a
     // bitmap. If the face has colour info that wasn't already handled, try rendering to a bitmap.
     if (getColourGlyphFormats() != 0)
-        if (auto layer = getNativeDetails()->getFallbackColourGlyphLayers (glyphNumber, combinedTransform); ! layer.empty())
+        if (auto layer = native->getFallbackColourGlyphLayers (glyphNumber, combinedTransform); ! layer.empty())
             return layer;
 
     // No colour info available for this glyph, so just get a simple monochromatic outline
