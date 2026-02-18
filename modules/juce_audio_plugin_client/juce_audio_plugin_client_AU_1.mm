@@ -1921,7 +1921,15 @@ public:
                 {
                     if (AudioProcessor* filter = ptr->juceFilter.get())
                     {
-                        if (AudioProcessorEditor* editorComp = filter->createEditorIfNeeded())
+                        auto* editorComp = std::invoke ([&]
+                        {
+                            if (auto* active = filter->getActiveEditor())
+                                return active;
+
+                            return filter->createEditorIfNeeded();
+                        });
+
+                        if (editorComp != nullptr)
                         {
                            #if JucePlugin_Enable_ARA
                             jassert (dynamic_cast<AudioProcessorEditorARAExtension*> (editorComp) != nullptr);
