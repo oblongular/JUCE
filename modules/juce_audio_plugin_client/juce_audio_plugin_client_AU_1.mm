@@ -1916,32 +1916,41 @@ public:
                 JuceAU* ptr{};
                 UInt32 propertySize = sizeof (ptr);
 
-                if (AudioUnitGetProperty (inAudioUnit, juceFilterObjectPropertyID,
-                                          kAudioUnitScope_Global, 0, &ptr, &propertySize) == noErr && ptr != nullptr)
+                if (AudioUnitGetProperty (inAudioUnit,
+                                          juceFilterObjectPropertyID,
+                                          kAudioUnitScope_Global,
+                                          0,
+                                          &ptr,
+                                          &propertySize) != noErr)
                 {
-                    if (AudioProcessor* filter = ptr->juceFilter.get())
-                    {
-                        auto* editorComp = std::invoke ([&]
-                        {
-                            if (auto* active = filter->getActiveEditor())
-                                return active;
-
-                            return filter->createEditorIfNeeded();
-                        });
-
-                        if (editorComp != nullptr)
-                        {
-                           #if JucePlugin_Enable_ARA
-                            jassert (dynamic_cast<AudioProcessorEditorARAExtension*> (editorComp) != nullptr);
-                            // for proper view embedding, ARA plug-ins must be resizable
-                            jassert (editorComp->isResizable());
-                           #endif
-                            return EditorCompHolder::createViewFor (filter, ptr, editorComp);
-                        }
-                    }
+                    return nil;
                 }
 
-                return nil;
+                if (ptr == nullptr)
+                    return nil;
+
+                auto* filter = ptr->juceFilter.get();
+
+                if (filter == nullptr)
+                    return nil;
+
+                auto* editorComp = std::invoke ([&]
+                {
+                    if (auto* active = filter->getActiveEditor())
+                        return active;
+
+                    return filter->createEditorIfNeeded();
+                });
+
+                if (editorComp == nullptr)
+                    return nil;
+
+               #if JucePlugin_Enable_ARA
+                jassert (dynamic_cast<AudioProcessorEditorARAExtension*> (editorComp) != nullptr);
+                // for proper view embedding, ARA plug-ins must be resizable
+                jassert (editorComp->isResizable());
+               #endif
+                return EditorCompHolder::createViewFor (filter, ptr, editorComp);
             });
 
             addProtocol (@protocol (AUCocoaUIBase));
