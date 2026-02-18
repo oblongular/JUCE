@@ -1813,7 +1813,8 @@ public:
     //==============================================================================
     struct JuceUIViewClass final : public ObjCClass<NSView>
     {
-        JuceUIViewClass()  : ObjCClass<NSView> ("JUCEAUView_")
+        JuceUIViewClass()
+            : ObjCClass ("JUCEAUView_")
         {
             addIvar<AudioProcessor*> ("filter");
             addIvar<JuceAU*> ("au");
@@ -1902,7 +1903,8 @@ public:
     //==============================================================================
     struct JuceUICreationClass final : public ObjCClass<NSObject>
     {
-        JuceUICreationClass()  : ObjCClass<NSObject> ("JUCE_AUCocoaViewClass_")
+        JuceUICreationClass()
+            : ObjCClass ("JUCE_AUCocoaViewClass_")
         {
             addMethod (@selector (interfaceVersion), [] (id, SEL) { return 0; });
             addMethod (@selector (description), [] (id, SEL)
