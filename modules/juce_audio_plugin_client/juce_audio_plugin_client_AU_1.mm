@@ -416,7 +416,7 @@ public:
             {
                 case juceFilterObjectPropertyID:
                     outWritable = false;
-                    outDataSize = sizeof (void*) * 2;
+                    outDataSize = sizeof (JuceAU*);
                     return noErr;
 
                 case kAudioUnitProperty_OfflineRender:
@@ -582,8 +582,7 @@ public:
                #endif
 
                 case juceFilterObjectPropertyID:
-                    ((void**) outData)[0] = (void*) static_cast<AudioProcessor*> (juceFilter.get());
-                    ((void**) outData)[1] = (void*) this;
+                    *static_cast<JuceAU**> (outData) = this;
                     return noErr;
 
                 case kAudioUnitProperty_OfflineRender:
@@ -1914,13 +1913,13 @@ public:
 
             addMethod (@selector (uiViewForAudioUnit:withSize:), [] (id, SEL, AudioUnit inAudioUnit, NSSize) -> NSView*
             {
-                void* pointers[2];
-                UInt32 propertySize = sizeof (pointers);
+                JuceAU* ptr{};
+                UInt32 propertySize = sizeof (ptr);
 
                 if (AudioUnitGetProperty (inAudioUnit, juceFilterObjectPropertyID,
-                                          kAudioUnitScope_Global, 0, pointers, &propertySize) == noErr)
+                                          kAudioUnitScope_Global, 0, &ptr, &propertySize) == noErr && ptr != nullptr)
                 {
-                    if (AudioProcessor* filter = static_cast<AudioProcessor*> (pointers[0]))
+                    if (AudioProcessor* filter = ptr->juceFilter.get())
                     {
                         if (AudioProcessorEditor* editorComp = filter->createEditorIfNeeded())
                         {
@@ -1929,7 +1928,7 @@ public:
                             // for proper view embedding, ARA plug-ins must be resizable
                             jassert (editorComp->isResizable());
                            #endif
-                            return EditorCompHolder::createViewFor (filter, static_cast<JuceAU*> (pointers[1]), editorComp);
+                            return EditorCompHolder::createViewFor (filter, ptr, editorComp);
                         }
                     }
                 }
