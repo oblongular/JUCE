@@ -2075,7 +2075,6 @@ public:
     }
 
     bool hasTitleBar() const                 { return (styleFlags & windowHasTitleBar) != 0; }
-    bool isSizing() const                    { return sizing; }
 
 private:
     HWND hwnd, parentToAddTo;
@@ -5049,33 +5048,18 @@ public:
 
     void handlePaintMessage() override
     {
-       #if JUCE_DIRECT2D_METRICS
-        auto paintStartTicks = Time::getHighResolutionTicks();
-       #endif
-
         updateRegion.findRECTAndValidate (peer.getHWND());
 
-        if (peer.isSizing())
-        {
-            for (const auto& rect : updateRegion.getRects())
-                deferredRepaints.add (D2DUtilities::toRectangle (rect));
-        }
-        else
-        {
-            for (const auto& rect : updateRegion.getRects())
-                direct2DContext->addDeferredRepaint (D2DUtilities::toRectangle (rect));
+        for (const auto& rect : updateRegion.getRects())
+            direct2DContext->addDeferredRepaint (D2DUtilities::toRectangle (rect));
 
-           #if JUCE_DIRECT2D_METRICS
-            lastPaintStartTicks = paintStartTicks;
-           #endif
-
-            handleDirect2DPaint();
-        }
+        schedulePaintOnVblank = true;
     }
 
     void repaint (const Rectangle<int>& area) override
     {
-        deferredRepaints.add (area);
+        auto r = D2DUtilities::toRECT (area);
+        InvalidateRect (peer.getHWND(), &r, FALSE);
     }
 
     void performAnyPendingRepaintsNow() override {}
@@ -5087,23 +5071,8 @@ public:
 
     void onVBlank() override
     {
-        if (peer.isSizing() || std::exchange (schedulePaintOnVblank, false))
-        {
-            for (const auto& rect : deferredRepaints)
-                direct2DContext->addDeferredRepaint (rect);
-
+        if (std::exchange (schedulePaintOnVblank, false))
             handleDirect2DPaint();
-        }
-        else
-        {
-            for (auto deferredRect : deferredRepaints)
-            {
-                auto r = D2DUtilities::toRECT (deferredRect);
-                InvalidateRect (peer.getHWND(), &r, FALSE);
-            }
-        }
-
-        deferredRepaints.clear();
     }
 
     void handleShowWindow() override
@@ -5479,7 +5448,6 @@ private:
 
     std::unique_ptr<WrappedD2DHwndContextBase> direct2DContext = getContextForPeer (peer);
     UpdateRegion updateRegion;
-    RectangleList<int> deferredRepaints;
     bool schedulePaintOnVblank = false;
 
    #if JUCE_ETW_TRACELOGGING
