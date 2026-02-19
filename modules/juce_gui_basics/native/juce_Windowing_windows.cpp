@@ -374,7 +374,7 @@ static bool isPerMonitorDPIAwareProcess()
    #if ! JUCE_WIN_PER_MONITOR_DPI_AWARE
     return false;
    #else
-    static bool dpiAware = []() -> bool
+    static bool dpiAware = std::invoke ([]
     {
         setDPIAwareness();
 
@@ -382,7 +382,7 @@ static bool isPerMonitorDPIAwareProcess()
         GetProcessDpiAwareness (nullptr, &context);
 
         return context == PROCESS_PER_MONITOR_DPI_AWARE;
-    }();
+    });
 
     return dpiAware;
    #endif
@@ -3327,7 +3327,7 @@ private:
                 .withPosition (requestedPhysicalClient.getPosition().toFloat())
                 .getLargestIntegerWithin();
 
-        const auto withSnappedPosition = [&]
+        const auto withSnappedPosition = std::invoke ([&]
         {
             auto modified = closestIntegralSize;
 
@@ -3344,7 +3344,7 @@ private:
             }
 
             return modified;
-        }();
+        });
 
         return physicalBorder->addedTo (withSnappedPosition);
     }
@@ -5548,14 +5548,14 @@ JUCE_API ComponentPeer* createNonRepaintingEmbeddedWindowsPeer (Component& compo
 //==============================================================================
 bool KeyPress::isKeyCurrentlyDown (const int keyCode)
 {
-    const auto k = [&]
+    const auto k = std::invoke ([&]
     {
         if ((keyCode & extendedKeyModifier) != 0)
             return keyCode & (extendedKeyModifier - 1);
 
         const auto vk = BYTE (VkKeyScan ((WCHAR) keyCode) & 0xff);
         return vk != (BYTE) -1 ? vk : keyCode;
-    }();
+    });
 
     return HWNDComponentPeer::isKeyDown (k);
 }
@@ -5925,13 +5925,13 @@ public:
 
     static void showInWindow (PlatformSpecificHandle* handle, ComponentPeer* peer)
     {
-        SetCursor ([&]
+        SetCursor (std::invoke ([&]
         {
             if (handle != nullptr && handle->impl != nullptr && peer != nullptr)
                 return handle->impl->getCursor (*peer);
 
             return LoadCursor (nullptr, IDC_ARROW);
-        }());
+        }));
     }
 
 private:
@@ -6077,13 +6077,13 @@ private:
                 jassertfalse; break;
         }
 
-        return std::make_unique<BuiltinImpl> ([&]
+        return std::make_unique<BuiltinImpl> (std::invoke ([&]
         {
             if (auto* c = LoadCursor (nullptr, cursorName))
                 return c;
 
             return LoadCursor (nullptr, IDC_ARROW);
-        }());
+        }));
     }
 
     std::unique_ptr<Impl> impl;
