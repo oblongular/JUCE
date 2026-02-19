@@ -1657,6 +1657,30 @@ public:
     }
 
     //==============================================================================
+    /*
+        When the host asks to create an editor NSView, we check the
+        AudioProcessor's activeEditor field to determine whether an editor is
+        currently alive.
+
+        If there's a living editor, we create a new EditorCompHolder that
+        points to the activeEditor.
+
+        The new EditorCompHolder adds the activeEditor as a child, which in
+        turn removes the activeEditor from any other EditorCompHolders that are
+        alive.
+
+        When an EditorCompHolder is destroyed, if it still has a child
+        component, then it deletes that child.
+
+        In effect, the AudioProcessorEditor is always owned by the
+        most-recently-created EditorCompHolder.
+
+        The JuceAU destructor contains some logic to destroy any active editor
+        before the AudioProcessor is torn down.
+
+        If/when we add support for multiple editors per processor, we should
+        revisit and simplify the ownership here.
+    */
     class EditorCompHolder final : public Component
     {
     public:
