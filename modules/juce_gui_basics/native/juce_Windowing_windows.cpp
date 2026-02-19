@@ -1405,28 +1405,19 @@ public:
 
         if (parentToAddTo == nullptr)
         {
-            if (hasTitleBar())
-            {
-                // Depending on the desktop scale factor, the physical size of the window may not map to
-                // an integral client-area size.
-                // In this case, we always round the width and height of the client area up to the next
-                // integer.
-                // This means that we may end up clipping off up to one logical pixel under the physical
-                // window border, but this is preferable to displaying an uninitialised/unpainted
-                // region of the client area.
-                const auto physicalBorder = findPhysicalBorderSize().value_or (BorderSize<int>{});
-                const auto physicalBounds = D2DUtilities::toRectangle (getWindowScreenRect (hwnd));
-                const auto physicalClient = physicalBorder.subtractedFrom (physicalBounds);
-                const auto logicalPosition = SH::convertPhysicalScreenPointToLogical (physicalBounds.getPosition().toFloat());
-                const auto logicalClient = physicalClient.toFloat() / getPlatformScaleFactor();
-                const auto snapped = logicalClient.withPosition (logicalPosition).getSmallestIntegerContainer();
-                return snapped;
-            }
-
+            // Depending on the desktop scale factor, the physical size of the window may not map to
+            // an integral client-area size.
+            // In this case, we always round the width and height of the client area up to the next
+            // integer.
+            // This means that we may end up clipping off up to one logical pixel under the physical
+            // window border, but this is preferable to displaying an uninitialised/unpainted
+            // region of the client area.
             const auto physicalClient = getClientRectInScreen().toFloat();
-            const auto logicalPosition = SH::convertPhysicalScreenPointToLogical (physicalClient.getPosition().toFloat());
+            const auto physicalPosition = physicalClient.getPosition().toFloat();
+            const auto logicalPosition = SH::convertPhysicalScreenPointToLogical (physicalPosition);
             const auto logicalClient = physicalClient / getPlatformScaleFactor();
-            const auto snapped = logicalClient.withPosition (logicalPosition).toNearestInt();
+            const auto snapped = logicalClient.withPosition (logicalPosition.roundToInt().toFloat())
+                                              .getSmallestIntegerContainer();
             return snapped;
         }
 
@@ -3302,9 +3293,12 @@ private:
         // borders with physical.
         const auto requestedPhysicalBounds = proposed;
         const auto requestedPhysicalClient = physicalBorder->subtractedFrom (requestedPhysicalBounds);
-        const auto requestedLogicalClient = SH::unscaledScreenPosToScaled (
-                component,
-                (requestedPhysicalClient.toFloat() / getPlatformScaleFactor()).toNearestInt());
+        const auto requestedPhysicalPosition = requestedPhysicalClient.getPosition().toFloat();
+        const auto requestedLogicalPosition = SH::convertPhysicalScreenPointToLogical (requestedPhysicalPosition);
+        const auto requestedPeerBounds = requestedPhysicalClient.toFloat() / getPlatformScaleFactor();
+        const auto requestedComponentBounds = SH::unscaledScreenPosToScaled (component, requestedPeerBounds);
+        const auto requestedLogicalClient = requestedComponentBounds.withPosition (requestedLogicalPosition)
+                                                                    .toNearestInt();
         const auto requestedLogicalBounds = logicalBorder.addedTo (requestedLogicalClient);
 
         const auto originalLogicalBounds = logicalBorder.addedTo (component.getBounds());
