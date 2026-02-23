@@ -157,6 +157,9 @@ void MPEKeyboardComponent::colourChanged()
 //==============================================================================
 MPEValue MPEKeyboardComponent::mousePositionToPitchbend (int initialNote, Point<float> mousePos)
 {
+    if (perNotePitchbendRange == 0)
+        return {};
+
     auto constrainedMousePos = [&]
     {
         auto horizontal = isHorizontal();
