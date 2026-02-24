@@ -3416,7 +3416,7 @@ struct ComponentTests  : public UnitTest
     {
         ScopedJuceInitialiser_GUI libraryInitialiser;
 
-        beginTest ("Painting a parents bounds paints both parent and child");
+        testCase ("Painting a parents bounds paints both parent and child", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3442,9 +3442,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child->numPaintCalls, 1);
             expectEquals (child->numPaintOverChildrenCalls, 1);
             expectEquals (child->numComponentPaintedCalls, 1);
-        }
+        });
 
-        beginTest ("Non-opaque children require their parent to repaint");
+        testCase ("Non-opaque children require their parent to repaint", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3459,9 +3459,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Opaque children don't require their parent to repaint");
+        testCase ("Opaque children don't require their parent to repaint", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3478,9 +3478,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 0);
             expectEquals (child->numPaintCalls, 1);
             expectEquals (parent->numPaintOverChildrenCalls, 1);
-        }
+        });
 
-        beginTest ("Opaque children don't require their parent to repaint (even when the parent uses setPaintingIsUnclipped (true))");
+        testCase ("Opaque children don't require their parent to repaint (even when the parent uses setPaintingIsUnclipped (true))", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3498,9 +3498,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 0);
             expectEquals (child->numPaintCalls, 1);
             expectEquals (parent->numPaintOverChildrenCalls, 1);
-        }
+        });
 
-        beginTest ("A partially obscured parent will repaint with reduced clip bounds");
+        testCase ("A partially obscured parent will repaint with reduced clip bounds", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3518,9 +3518,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child->numPaintCalls, 1);
 
             expect (parent->lastClipBounds == bounds);
-        }
+        });
 
-        beginTest ("A totally obscured parent will never repaint");
+        testCase ("A totally obscured parent will never repaint", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3543,9 +3543,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintOverChildrenCalls, 1);
             expectEquals (child1->numPaintCalls, 1);
             expectEquals (child2->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("An opaque component will hide sibling components behind it");
+        testCase ("An opaque component will hide sibling components behind it", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3573,9 +3573,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child1->numPaintOverChildrenCalls, 0);
             expectEquals (child2->numPaintCalls, 1);
             expectEquals (child3->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("An opaque component will hide parent-sibling components behind it");
+        testCase ("An opaque component will hide parent-sibling components behind it", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3604,9 +3604,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child2->numPaintCalls, 0);
             expectEquals (child2->numPaintOverChildrenCalls, 1);
             expectEquals (child3->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("An opaque component will reduce the clip bounds of sibling components behind it");
+        testCase ("An opaque component will reduce the clip bounds of sibling components behind it", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3635,9 +3635,9 @@ struct ComponentTests  : public UnitTest
 
             expect (child1->lastClipBounds == bounds);
             expect (child3->lastClipBounds == child3->getBounds());
-        }
+        });
 
-        beginTest ("A child component will be clipped when painted");
+        testCase ("A child component will be clipped when painted", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3655,9 +3655,9 @@ struct ComponentTests  : public UnitTest
 
             expect (parent->lastClipBounds == parent->getLocalBounds());
             expect (child->lastClipBounds == child->getLocalBounds());
-        }
+        });
 
-        beginTest ("setPaintingIsUnclipped (true) will cause a child to have its parents clip bounds");
+        testCase ("setPaintingIsUnclipped (true) will cause a child to have its parents clip bounds", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3672,9 +3672,9 @@ struct ComponentTests  : public UnitTest
             paintComponentBounds (*parent);
 
             expect (child->lastClipBounds == child->getLocalArea (parent.get(), parent->getLocalBounds()));
-        }
+        });
 
-        beginTest ("Opaque components hide parents that use setPaintingIsUnclipped (true)");
+        testCase ("Opaque components hide parents that use setPaintingIsUnclipped (true)", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3691,9 +3691,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (parent->numPaintCalls, 0);
             expectEquals (child->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Invisible child components will not be considered opaque");
+        testCase ("Invisible child components will not be considered opaque", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3711,9 +3711,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 0);
-        }
+        });
 
-        beginTest ("Invisible sibling components will not be considered opaque");
+        testCase ("Invisible sibling components will not be considered opaque", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3736,9 +3736,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (child1->numPaintCalls, 1);
             expectEquals (child2->numPaintCalls, 0);
-        }
+        });
 
-        beginTest ("Components with an invisible parent will not be considered opaque");
+        testCase ("Components with an invisible parent will not be considered opaque", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3762,9 +3762,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 0);
             expectEquals (grandchild->numPaintCalls, 0);
-        }
+        });
 
-        beginTest ("Components with a width of 0 will not have their paint functions called");
+        testCase ("Components with a width of 0 will not have their paint functions called", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3780,9 +3780,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 0);
             expectEquals (child->numPaintOverChildrenCalls, 0);
-        }
+        });
 
-        beginTest ("Components with a height of 0 will not have their paint functions called");
+        testCase ("Components with a height of 0 will not have their paint functions called", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3798,9 +3798,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 0);
             expectEquals (child->numPaintOverChildrenCalls, 0);
-        }
+        });
 
-        beginTest ("Transparent components will not be considered opaque");
+        testCase ("Transparent components will not be considered opaque", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3817,9 +3817,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Opaque components will only be considered opaque up to a transparent parent");
+        testCase ("Opaque components will only be considered opaque up to a transparent parent", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3841,9 +3841,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child1->numPaintCalls, 0);
             expectEquals (child2->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Transformed components will not be considered opaque");
+        testCase ("Transformed components will not be considered opaque", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -3860,9 +3860,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Opaque components will only be considered opaque up to a transformed parent");
+        testCase ("Opaque components will only be considered opaque up to a transformed parent", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3884,9 +3884,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 1);
             expectEquals (child1->numPaintCalls, 0);
             expectEquals (child2->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Nested opaque components prevent parents from being painted");
+        testCase ("Nested opaque components prevent parents from being painted", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3908,9 +3908,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (parent->numPaintCalls, 0);
             expectEquals (child1->numPaintCalls, 0);
             expectEquals (child2->numPaintCalls, 1);
-        }
+        });
 
-        beginTest ("Areas of an opaque component outside its parent will not be considered opaque");
+        testCase ("Areas of an opaque component outside its parent will not be considered opaque", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -3933,9 +3933,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child1->numPaintCalls, 0);
             expectEquals (child2->numPaintCalls, 1);
             expect (child2->lastClipBounds == Rectangle { 50, 0, 50, 100 });
-        }
+        });
 
-        beginTest ("Painting a component that is buffered to an image, results in a cache hit");
+        testCase ("Painting a component that is buffered to an image, results in a cache hit", [&]
         {
             // Note top-level components can't be buffered to an image!
             const auto parent = std::make_unique<TestComponent>();
@@ -3961,10 +3961,10 @@ struct ComponentTests  : public UnitTest
             paintComponentBounds (*child);
             expectEquals (child->numPaintCalls, 1);
             expectEquals (child->numCacheHits, 2);
-        }
+        });
 
-        beginTest ("Painting a component that is buffered to an image, after calling repaint, "
-                   "results in a cache miss");
+        testCase ("Painting a component that is buffered to an image, after calling repaint, "
+                  "results in a cache miss", [&]
         {
             // Note top-level components can't be buffered to an image!
             const auto parent = std::make_unique<TestComponent>();
@@ -3991,10 +3991,10 @@ struct ComponentTests  : public UnitTest
             paintComponentBounds (*child);
             expectEquals (child->numPaintCalls, 2);
             expectEquals (child->numCacheHits, 1);
-        }
+        });
 
-        beginTest ("A component that is buffered to an image but obscured by an opaque child, "
-                   "still paints the cached image");
+        testCase ("A component that is buffered to an image but obscured by an opaque child, "
+                  "still paints the cached image", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -4034,9 +4034,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child3->numPaintCalls, 1);
             expectEquals (child4->numPaintCalls, 2);
             expectEquals (child2->numCacheHits, 1);
-        }
+        });
 
-        beginTest ("A component that is buffered to an image is obscured by an opaque component");
+        testCase ("A component that is buffered to an image is obscured by an opaque component", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -4082,10 +4082,10 @@ struct ComponentTests  : public UnitTest
             expectEquals (child1->numPaintCalls, 1);
             expectEquals (child2->numPaintCalls, 2);
             expectEquals (child1->numCacheHits, 1);
-        }
+        });
 
-        beginTest ("A component that is a child of a component buffered to an image is not "
-                   "obscured by an opaque component outside the buffered image");
+        testCase ("A component that is a child of a component buffered to an image is not "
+                  "obscured by an opaque component outside the buffered image", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -4120,10 +4120,10 @@ struct ComponentTests  : public UnitTest
             expectEquals (child2->numPaintCalls, 1);
             expectEquals (child3->numPaintCalls, 2);
             expectEquals (child1->numCacheHits, 1);
-        }
+        });
 
-        beginTest ("A component that is a child of a component buffered to an image is obscured by "
-                   "an opaque component inside the buffered image");
+        testCase ("A component that is a child of a component buffered to an image is obscured by "
+                  "an opaque component inside the buffered image", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -4158,10 +4158,10 @@ struct ComponentTests  : public UnitTest
             expectEquals (child2->numPaintCalls, 0);
             expectEquals (child3->numPaintCalls, 1);
             expectEquals (child1->numCacheHits, 1);
-        }
+        });
 
-        beginTest ("An opaque component that is a child of a component buffered to an image "
-                   "obscures components outside the buffered image");
+        testCase ("An opaque component that is a child of a component buffered to an image "
+                  "obscures components outside the buffered image", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child1 = std::make_unique<TestComponent>();
@@ -4196,9 +4196,9 @@ struct ComponentTests  : public UnitTest
             expectEquals (child2->numPaintCalls, 1);
             expectEquals (child3->numPaintCalls, 1);
             expectEquals (child2->numCacheHits, 1);
-        }
+        });
 
-        beginTest ("Recursive paint calls trigger additional componentPainted callbacks");
+        testCase ("Recursive paint calls trigger additional componentPainted callbacks", [&]
         {
             const auto component = std::make_unique<RecursiveTestComponent>();
             component->setBounds ({ 0, 0, 100, 100 });
@@ -4207,9 +4207,9 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (component->numPaintCalls, 2);
             expectEquals (component->numComponentPaintedCalls, 2);
-        }
+        });
 
-        beginTest ("A component cached to an image always triggers a componentPainted callback");
+        testCase ("A component cached to an image always triggers a componentPainted callback", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<TestComponent>();
@@ -4231,10 +4231,10 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (child->numPaintCalls, 1);
             expectEquals (child->numComponentPaintedCalls, 2);
-        }
+        });
 
-        beginTest ("Recursive paint calls in a component cached to an image, "
-                   "trigger additional componentPainted callbacks when writing to the cache");
+        testCase ("Recursive paint calls in a component cached to an image, "
+                  "trigger additional componentPainted callbacks when writing to the cache", [&]
         {
             const auto parent = std::make_unique<TestComponent>();
             const auto child = std::make_unique<RecursiveTestComponent>();
@@ -4256,7 +4256,7 @@ struct ComponentTests  : public UnitTest
 
             expectEquals (child->numPaintCalls, 2);
             expectEquals (child->numComponentPaintedCalls, 3);
-        }
+        });
     }
 };
 
