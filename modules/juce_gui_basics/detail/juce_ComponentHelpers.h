@@ -205,7 +205,7 @@ struct ComponentHelpers
     {
         c.invalidateCachedImageResources();
 
-        for (auto* child : c.childComponentList)
+        for (auto* child : c.getChildren())
             releaseAllCachedImageResources (*child);
     }
 

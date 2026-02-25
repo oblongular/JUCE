@@ -2750,8 +2750,6 @@ private:
     Data& createDataIfNeeded();
     const Array<KeyListener*>* getKeyListeners() const;
 
-    friend struct detail::ComponentHelpers;
-
     /* Components aren't allowed to have copy constructors, as this would mess up parent hierarchies.
        You might need to give your subclasses a private dummy constructor to avoid compiler warnings.
     */
