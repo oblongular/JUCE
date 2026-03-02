@@ -581,6 +581,10 @@ struct BackgroundDownloadTask final : public URL::DownloadTask
         if (options.usePost)
             [request setHTTPMethod: @"POST"];
 
+        if (const auto& postData = urlToUse.getPostDataAsMemoryBlock(); ! postData.isEmpty())
+            [request setHTTPBody: [NSData dataWithBytes: postData.getData()
+                                                 length: postData.getSize()]];
+
         StringArray headerLines;
         headerLines.addLines (options.extraHeaders);
         headerLines.removeEmptyStrings (true);
