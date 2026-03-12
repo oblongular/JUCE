@@ -112,6 +112,9 @@ public:
         return reinterpret_cast<Fn*> (getFunction (functionName));
     }
 
+    /** Returns true if the library was successfully found and opened. */
+    bool isOpen() const noexcept { return handle != nullptr; }
+
     /** Returns the platform-specific native library handle.
         You'll need to cast this to whatever is appropriate for the OS that's in
         use.
