@@ -90,6 +90,28 @@ public:
     */
     void* getFunction (const String& functionName) noexcept;
 
+    /** Tries to find a named function in the currently-open DLL and returns a
+        pointer to it, cast to the requested function type.
+
+        If the library is not currently open, or if the named function cannot be
+        found, this method will return a null pointer.
+
+        The template parameter must be a function type, e.g.
+
+        @code
+        auto fn = library.getFunction<void*(const char*)> ("someFunction");
+        @endcode
+
+        It is the caller's responsibility to ensure that the requested function
+        signature matches the actual function exported by the dynamic library.
+        Passing an incorrect signature will result in undefined behaviour.
+    */
+    template <typename Fn>
+    Fn* getFunction (const String& functionName) noexcept
+    {
+        return reinterpret_cast<Fn*> (getFunction (functionName));
+    }
+
     /** Returns the platform-specific native library handle.
         You'll need to cast this to whatever is appropriate for the OS that's in
         use.
