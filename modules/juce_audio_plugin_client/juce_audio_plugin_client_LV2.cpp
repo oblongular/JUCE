@@ -1367,6 +1367,7 @@ private:
             return result;
 
         const auto editorInstance = rawToUniquePtr (proc.createEditor());
+        const ScopeGuard scope { [&] { proc.editorBeingDeleted (editorInstance.get()); } };
         const auto resizeFeatureString = editorInstance->isResizable() ? "ui:resize" : "ui:noUserResize";
 
         os << "@prefix lv2:  <http://lv2plug.in/ns/lv2core#> .\n"
