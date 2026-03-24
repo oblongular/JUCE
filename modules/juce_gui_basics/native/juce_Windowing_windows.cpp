@@ -334,7 +334,8 @@ static void checkForPointerAPI()
 }
 
 //==============================================================================
-using GetSystemMetricsForDpiFunc               = int                   (WINAPI*) (int, UINT);
+using SetProcessDPIAwarenessContextFunc = BOOL (WINAPI*) (DPI_AWARENESS_CONTEXT);
+static SetProcessDPIAwarenessContextFunc setProcessDPIAwarenessContext = nullptr;
 
 static bool hasCheckedForDPIAwareness = false;
 
@@ -346,6 +347,8 @@ static void loadDPIAwarenessFunctions()
 
     if (shcoreModule == nullptr)
         return;
+
+    setProcessDPIAwarenessContext = (SetProcessDPIAwarenessContextFunc) GetProcAddress (shcoreModule, "SetProcessDpiAwarenessContext");
 }
 
 static void setDPIAwareness()
@@ -357,7 +360,8 @@ static void setDPIAwareness()
 
     loadDPIAwarenessFunctions();
 
-    if (SetProcessDpiAwarenessContext (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
+    if (setProcessDPIAwarenessContext != nullptr
+        && setProcessDPIAwarenessContext (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2))
         return;
 
     if (SUCCEEDED (SetProcessDpiAwareness (PROCESS_PER_MONITOR_DPI_AWARE)))
