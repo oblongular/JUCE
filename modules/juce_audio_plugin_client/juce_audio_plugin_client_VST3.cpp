@@ -2305,7 +2305,7 @@ private:
                 pluginEditor.reset (plugin.createEditorAndMakeActive());
 
                #if JucePlugin_Enable_ARA
-                jassert (dynamic_cast<AudioProcessorEditorARAExtension*> (pluginEditor.get()) != nullptr);
+                jassert (pluginEditor->getARAClientExtensions() != nullptr);
                 // for proper view embedding, ARA plug-ins must be resizable
                 jassert (pluginEditor->isResizable());
                #endif

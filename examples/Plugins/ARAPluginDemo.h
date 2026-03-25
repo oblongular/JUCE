@@ -2302,7 +2302,7 @@ private:
 
 
 class ARADemoPluginProcessorEditor final : public AudioProcessorEditor,
-                                           public AudioProcessorEditorARAExtension
+                                           private AudioProcessorEditorARAExtension
 {
 public:
     explicit ARADemoPluginProcessorEditor (ARADemoPluginAudioProcessorImpl& p)
@@ -2341,6 +2341,8 @@ public:
         if (documentView != nullptr)
             documentView->setBounds (getLocalBounds());
     }
+
+    AudioProcessorEditorARAExtension* getARAClientExtensions() override { return this; }
 
 private:
     std::unique_ptr<Component> documentView;
