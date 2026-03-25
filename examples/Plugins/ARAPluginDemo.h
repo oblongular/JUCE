@@ -866,7 +866,7 @@ struct PlayHeadState
 
 //==============================================================================
 class ARADemoPluginAudioProcessorImpl : public AudioProcessor,
-                                        public AudioProcessorARAExtension
+                                        private AudioProcessorARAExtension
 {
 public:
     //==============================================================================
@@ -937,6 +937,8 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock&) override                  {}
     void setStateInformation (const void*, int) override              {}
+
+    AudioProcessorARAExtension* getARAClientExtensions() override { return this; }
 
     PlayHeadState playHeadState;
 
