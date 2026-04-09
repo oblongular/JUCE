@@ -993,6 +993,15 @@ static void updateModifiers (const UIKeyModifierFlags flags)
 }
 
 API_AVAILABLE (ios(13.4))
+static void updateButtonMask (const UIEventButtonMask mask)
+{
+    const auto convert = [&mask] (UIEventButtonMask f, int result) { return (mask & f) != 0 ? result : 0; };
+    const auto juceFlags = convert (UIEventButtonMaskPrimary, ModifierKeys::leftButtonModifier)
+                         | convert (UIEventButtonMaskSecondary, ModifierKeys::popupMenuClickModifier);
+    ModifierKeys::currentModifiers = ModifierKeys::getCurrentModifiers().withoutMouseButtons().withFlags (juceFlags);
+}
+
+API_AVAILABLE (ios(13.4))
 static int getKeyCodeForKey (UIKey* key)
 {
     return getKeyCodeForCharacters ([key charactersIgnoringModifiers]);
@@ -1035,6 +1044,7 @@ static bool attemptToConsumeKeys (JuceUIView* view, NSSet<UIPress*>* presses)
             auto isEscape = false;
 
             updateModifiers ([event modifierFlags]);
+            updateButtonMask ([event buttonMask]);
 
             for (UIPress* press in presses)
             {
@@ -1064,6 +1074,7 @@ static bool doKeysUp (UIViewComponentPeer* owner, NSSet<UIPress*>* presses, UIPr
     if (@available (iOS 13.4, *))
     {
         updateModifiers ([event modifierFlags]);
+        updateButtonMask ([event buttonMask]);
 
         for (UIPress* press in presses)
             if (auto* key = [press key])
@@ -2079,6 +2090,7 @@ void UIViewComponentPeer::handleTouches (UIEvent* event, MouseEventFlags mouseEv
     if (@available (iOS 13.4, *))
     {
         updateModifiers ([event modifierFlags]);
+        updateButtonMask ([event buttonMask]);
     }
 
     NSArray* touches = [[event touchesForView: view] allObjects];
@@ -2109,7 +2121,6 @@ void UIViewComponentPeer::handleTouches (UIEvent* event, MouseEventFlags mouseEv
             if ([touch phase] != UITouchPhaseBegan)
                 continue;
 
-            ModifierKeys::currentModifiers = ModifierKeys::getCurrentModifiers().withoutMouseButtons().withFlags (ModifierKeys::leftButtonModifier);
             modsToSend = ModifierKeys::getCurrentModifiers();
 
             // this forces a mouse-enter/up event, in case for some reason we didn't get a mouse-up before
