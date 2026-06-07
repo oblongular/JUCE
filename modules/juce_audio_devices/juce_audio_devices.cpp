@@ -235,6 +235,11 @@ namespace juce
  #include "native/juce_JackAudio.cpp"
 #endif
 
+#if JUCE_DANTE
+ #include <dante/BufferContext.hpp>
+ #include "native/juce_Dante.cpp"
+#endif
+
 #if ! JUCE_SYSTEMAUDIOVOL_IMPLEMENTED
 namespace juce
 {

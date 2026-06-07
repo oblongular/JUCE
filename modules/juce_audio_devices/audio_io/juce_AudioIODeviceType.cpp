@@ -143,4 +143,10 @@ void AudioIODeviceType::callDeviceChangeListeners()
  AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Oboe()      { return nullptr; }
 #endif
 
+#if JUCE_DANTE
+ AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return new DanteClasses::DanteAudioIODeviceType(); }
+#else
+ AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return nullptr; }
+#endif
+
 } // namespace juce

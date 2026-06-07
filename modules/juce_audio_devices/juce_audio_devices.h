@@ -176,6 +176,13 @@
  #define JUCE_JACK 0
 #endif
 
+/** Config: JUCE_DANTE
+    Enables Dante audio devices.
+*/
+#ifndef JUCE_DANTE
+ #define JUCE_DANTE 0
+#endif
+
 /** Config: JUCE_USE_ANDROID_OBOE
     Enables Oboe devices (Android only).
 */
@@ -253,4 +260,13 @@ namespace juce
 
 #if JUCE_IOS
  #include "native/juce_Audio_ios.h"
+#endif
+
+#if JUCE_DANTE
+namespace juce
+{
+    /** Sets the TX latency in microseconds used by the Dante audio backend.
+        Must be called before the device is opened. Defaults to 1000 us. */
+    JUCE_API void setDanteTxLatencyUs (unsigned microseconds) noexcept;
+}
 #endif
