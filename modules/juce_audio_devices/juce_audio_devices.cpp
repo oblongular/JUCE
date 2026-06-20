@@ -236,7 +236,7 @@ namespace juce
 #endif
 
 #if JUCE_DANTE
- #include <dante/BufferContext.hpp>
+ #include <dante/DanteAudio.hpp>
  #include "native/juce_Dante.cpp"
 #endif
 
