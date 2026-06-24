@@ -38,6 +38,7 @@ public:
           periodSize (initialPeriodSize)
     {
         mContext.registerBlockAccessor (&mAccessor);
+        allocateBuffers();
     }
 
     ~DanteAudioIODevice() override
@@ -175,6 +176,16 @@ private:
         }
     }
 
+    void allocateBuffers()
+    {
+        inputStorage.assign  (numInputs,  std::vector<float> (periodSize, 0.0f));
+        outputStorage.assign (numOutputs, std::vector<float> (periodSize, 0.0f));
+        inputPtrs.resize  (numInputs);
+        outputPtrs.resize (numOutputs);
+        for (unsigned i = 0; i < numInputs;  ++i)  inputPtrs[i]  = inputStorage[i].data();
+        for (unsigned i = 0; i < numOutputs; ++i)  outputPtrs[i] = outputStorage[i].data();
+    }
+
     void reconfigureChannels (const Dante::BufferView::PollInfo& poll)
     {
         mAccessor.setChannels (false);  // asymmetric: full TX and RX independently
@@ -184,13 +195,7 @@ private:
         sampleRate = poll.mSamplerate;
         periodSize = mBufferView.getPeriodSizeFrames();
 
-        inputStorage.assign  (numInputs,  std::vector<float> (periodSize, 0.0f));
-        outputStorage.assign (numOutputs, std::vector<float> (periodSize, 0.0f));
-
-        inputPtrs.resize  (numInputs);
-        outputPtrs.resize (numOutputs);
-        for (unsigned i = 0; i < numInputs;  ++i)  inputPtrs[i]  = inputStorage[i].data();
-        for (unsigned i = 0; i < numOutputs; ++i)  outputPtrs[i] = outputStorage[i].data();
+        allocateBuffers();
 
         activeInputChannels  = BigInteger();
         activeInputChannels .setRange (0, (int) numInputs,  true);
