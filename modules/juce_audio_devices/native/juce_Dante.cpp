@@ -3,11 +3,12 @@ namespace juce
 namespace DanteClasses
 {
 
-static constexpr unsigned kDefaultSampleRate  = 48000;
-static constexpr unsigned kDefaultNumChannels = 8;
-static constexpr unsigned kDefaultPeriodSize  = 64;
-static constexpr unsigned kDefaultTxLatencyUs = 1000;  // 1ms on Linux
-static constexpr int      kInactiveTimeoutMs  = 1000;  // disconnect after 1s inactivity
+static constexpr const char* kEndpointName      = "DanteEP";
+static constexpr unsigned    kDefaultSampleRate  = 48000;
+static constexpr unsigned    kDefaultNumChannels = 8;
+static constexpr unsigned    kDefaultPeriodSize  = 64;
+static constexpr unsigned    kDefaultTxLatencyUs = 1000;  // 1ms on Linux
+static constexpr int         kInactiveTimeoutMs  = 1000;  // disconnect after 1s inactivity
 
 static unsigned gTxLatencyUs = kDefaultTxLatencyUs;
 
@@ -129,7 +130,7 @@ private:
     {
         while (! threadShouldExit())
         {
-            if (mContext.connect ("DanteEP", false, 1) != 0)
+            if (mContext.connect (kEndpointName, false, 1) != 0)
                 continue;
 
             runAudioLoop();
@@ -283,7 +284,7 @@ public:
     void scanForDevices() override
     {
         Dante::DefaultBufferContext ctx (makeSilentLogger(), 2000, false);
-        if (ctx.connect ("DanteEP", false, 0) != 0)
+        if (ctx.connect (kEndpointName, false, 0) != 0)
         {
             cachedName       = "Dante-Not-Present";
             cachedNumInputs  = 0;
@@ -291,7 +292,7 @@ public:
             return;
         }
 
-        cachedName = "Dante";
+        cachedName = kEndpointName;
 
         const auto result = ctx.wait();
         if (result.pollInfo.mState == Dante::BufferView::State::READY)
@@ -327,7 +328,7 @@ public:
     }
 
 private:
-    String   cachedName       = "Dante-Not-Present";
+    String   cachedName       = kEndpointName;
     unsigned cachedNumInputs  = kDefaultNumChannels;
     unsigned cachedNumOutputs = kDefaultNumChannels;
     unsigned cachedSampleRate = kDefaultSampleRate;
