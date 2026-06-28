@@ -164,7 +164,10 @@ private:
             if (cb == nullptr)
                 continue;
 
-            const unsigned frames = (unsigned) txFrames;
+            // Cap to periodSize: after a late recovery mTxFramesToWrite = mTxLatencyFrames
+            // (48 at 48 kHz) which exceeds periodSize (16), causing out-of-bounds writes
+            // into the periodSize-allocated inputStorage/outputStorage buffers.
+            const unsigned frames = std::min ((unsigned) txFrames, periodSize);
 
             readRxToFloat (frames);
 
@@ -213,25 +216,29 @@ private:
 
     void readRxToFloat (unsigned frames)
     {
+        unsigned offset = 0;
         mAccessor.accessRxBlock ([&] (unsigned n, const std::vector<int32_t*>& rxPtrs)
         {
             for (unsigned ch = 0; ch < numInputs; ++ch)
                 if (ch < rxPtrs.size() && rxPtrs[ch])
                     for (unsigned i = 0; i < n; ++i)
-                        inputStorage[ch][i] = rxPtrs[ch][i] * (1.0f / 2147483648.0f);
+                        inputStorage[ch][offset + i] = rxPtrs[ch][i] * (1.0f / 2147483648.0f);
+            offset += n;
             return n;
         }, frames);
     }
 
     void writeFloatToTx (unsigned frames)
     {
+        unsigned offset = 0;
         mAccessor.accessTxBlock ([&] (unsigned n, const std::vector<int32_t*>& txPtrs)
         {
             for (unsigned ch = 0; ch < numOutputs; ++ch)
                 if (ch < txPtrs.size() && txPtrs[ch])
                     for (unsigned i = 0; i < n; ++i)
-                        txPtrs[ch][i] = (int32_t) (jlimit (-1.0f, 1.0f, outputStorage[ch][i])
+                        txPtrs[ch][i] = (int32_t) (jlimit (-1.0f, 1.0f, outputStorage[ch][offset + i])
                                                     * 2147483647.0f);
+            offset += n;
             return n;
         }, frames);
     }
