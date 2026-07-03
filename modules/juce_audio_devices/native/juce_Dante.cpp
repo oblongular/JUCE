@@ -29,7 +29,12 @@ public:
                         unsigned initialPeriodSize,
                         unsigned txLatencyUs)
         : AudioIODevice (deviceName, "Dante"),
-          Thread ("Dante Audio"),
+          // Linux's TASK_COMM_LEN is 16 bytes including the null terminator, so the
+          // usable limit is 15 characters. pthread_setname_np() returns ERANGE (which
+          // JUCE ignores) and leaves the name unchanged if given anything longer -
+          // "JUCE/Dante-Audio" (16 chars) silently failed and left the thread showing
+          // the inherited process name instead. Keep this at 15 characters or fewer.
+          Thread ("JUCE/DanteAudio"),
           mContext (makeSilentLogger(), kInactiveTimeoutMs, false),
           mBufferView (mContext.getBufferView()),
           mAccessor (mBufferView, Dante::BlockAccessorConfig (txLatencyUs)),
@@ -97,7 +102,39 @@ public:
         cb->audioDeviceAboutToStart (this);
         callback.store (cb);
         playing = true;
-        startThread (Thread::Priority::highest);
+
+        // startThread(Priority::highest) is a no-op on Linux — JUCE's own comment on
+        // Thread::startThreadInternal() says non-realtime priority "is essentially
+        // useless on Linux as only realtime has any options". startRealtimeThread()
+        // is what actually applies a real-time scheduling policy before the thread
+        // even starts running (pthread_attr_setschedpolicy, so there's no window
+        // where it runs at normal priority first). On Linux this maps to SCHED_RR,
+        // not SCHED_FIFO like DepApe/dep_sync_fanoutd — RR only differs from FIFO
+        // when multiple threads share the same priority and need to time-slice,
+        // which doesn't apply here as long as this thread runs on cores dedicated
+        // to DSP-style consumers (see perf_tuning.dsp_cores in the NixOS module),
+        // not DEP's own dep_cores/net_cores.
+        //
+        // Priority 8 of 0-10 maps to roughly raw SCHED_RR priority ~80 on Linux
+        // (JUCE linearly maps 0-10 onto sched_get_priority_min/max(SCHED_RR),
+        // typically 1-99), matching this project's dsp_rtprio convention (the
+        // priority DSP clients like mc_delay/DepConvolver run at via rt-run-dsp.sh).
+        if (! startRealtimeThread (Thread::RealtimeOptions()
+                .withPriority (8)
+                .withApproximateAudioProcessingTime ((int) periodSize, (double) sampleRate)))
+        {
+            // Unlike startThread(), a failed startRealtimeThread() leaves NO thread
+            // running at all — createNativeThread() calls pthread_create() with the
+            // realtime scheduling attributes already set, and if that pthread_create()
+            // fails (most commonly EPERM: no CAP_SYS_NICE / RLIMIT_RTPRIO is 0 for this
+            // user), it returns without falling back to a normal-priority thread. That
+            // means silent, total audio failure (no processing loop runs) rather than
+            // degraded performance, so this is worth surfacing loudly rather than
+            // logging and continuing as if playback were still possible.
+            lastError = "Failed to start Dante audio thread with realtime scheduling "
+                        "(no CAP_SYS_NICE / RLIMIT_RTPRIO too low?) - audio will not run";
+            Logger::writeToLog (lastError);
+        }
     }
 
     void stop() override
