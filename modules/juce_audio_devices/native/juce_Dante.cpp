@@ -3,14 +3,17 @@ namespace juce
 namespace DanteClasses
 {
 
-static constexpr const char* kEndpointName      = "DanteEP";
+static constexpr const char* kDefaultShmName    = "DanteEP";
 static constexpr unsigned    kDefaultSampleRate  = 48000;
 static constexpr unsigned    kDefaultNumChannels = 8;
 static constexpr unsigned    kDefaultPeriodSize  = 64;
 static constexpr unsigned    kDefaultTxLeadUs = 1000;  // 1ms on Linux
+static constexpr unsigned    kDefaultRxLagUs  = 0;
 static constexpr int         kInactiveTimeoutMs  = 1000;  // disconnect after 1s inactivity
 
 static unsigned gTxLeadUs = kDefaultTxLeadUs;
+static unsigned gRxLagUs  = kDefaultRxLagUs;
+static String   gShmName  = kDefaultShmName;
 
 // Forwards WARNING/ERROR to JUCE's Logger — everything below that (INFO/DEBUG)
 // would fire every period and is too noisy to surface here.
@@ -47,7 +50,9 @@ public:
                         unsigned initialNumOutputs,
                         unsigned initialSampleRate,
                         unsigned initialPeriodSize,
-                        unsigned txLeadUs)
+                        unsigned txLeadUs,
+                        unsigned rxLagUs,
+                        const String& shmName)
         : AudioIODevice (deviceName, "Dante"),
           // Linux's TASK_COMM_LEN is 16 bytes including the null terminator, so the
           // usable limit is 15 characters. pthread_setname_np() returns ERANGE (which
@@ -57,11 +62,12 @@ public:
           Thread ("JUCE/DanteAudio"),
           mContext (makeBackendLogger(), kInactiveTimeoutMs, false),
           mBufferView (mContext.getBufferView()),
-          mAccessor (mBufferView, Dante::BlockAccessorConfig (txLeadUs)),
+          mAccessor (mBufferView, Dante::BlockAccessorConfig (txLeadUs, rxLagUs)),
           numInputs  (initialNumInputs),
           numOutputs (initialNumOutputs),
           sampleRate (initialSampleRate),
-          periodSize (initialPeriodSize)
+          periodSize (initialPeriodSize),
+          shmName    (shmName)
     {
         mContext.registerBlockAccessor (&mAccessor);
         allocateBuffers();
@@ -199,7 +205,7 @@ private:
     {
         while (! threadShouldExit())
         {
-            if (mContext.connect (kEndpointName, false, 1) != 0)
+            if (mContext.connect (shmName.toStdString(), false, 1) != 0)
                 continue;
 
             setLastError ({});
@@ -348,6 +354,7 @@ private:
 
     unsigned numInputs,  numOutputs;
     unsigned sampleRate, periodSize;
+    const String shmName;
 
     BigInteger activeInputChannels, activeOutputChannels;
     bool       deviceOpen = false;
@@ -366,7 +373,7 @@ public:
     void scanForDevices() override
     {
         Dante::DefaultBufferContext ctx (makeBackendLogger(), 2000, false);
-        if (ctx.connect (kEndpointName, false, 0) != 0)
+        if (ctx.connect (gShmName.toStdString(), false, 0) != 0)
         {
             cachedName       = "Dante-Not-Present";
             cachedNumInputs  = 0;
@@ -374,7 +381,7 @@ public:
             return;
         }
 
-        cachedName = kEndpointName;
+        cachedName = gShmName;
 
         const auto result = ctx.wait();
         if (result.pollInfo.mState == Dante::BufferView::State::READY)
@@ -406,11 +413,13 @@ public:
                                        cachedNumOutputs,
                                        cachedSampleRate,
                                        cachedPeriodSize,
-                                       gTxLeadUs);
+                                       gTxLeadUs,
+                                       gRxLagUs,
+                                       gShmName);
     }
 
 private:
-    String   cachedName       = kEndpointName;
+    String   cachedName       = gShmName;
     unsigned cachedNumInputs  = kDefaultNumChannels;
     unsigned cachedNumOutputs = kDefaultNumChannels;
     unsigned cachedSampleRate = kDefaultSampleRate;
@@ -422,6 +431,16 @@ private:
 void setDanteTxLeadUs (unsigned microseconds) noexcept
 {
     DanteClasses::gTxLeadUs = microseconds;
+}
+
+void setDanteRxLagUs (unsigned microseconds) noexcept
+{
+    DanteClasses::gRxLagUs = microseconds;
+}
+
+void setDanteShmName (const String& name)
+{
+    DanteClasses::gShmName = name;
 }
 
 } // namespace juce

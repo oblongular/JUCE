@@ -268,5 +268,13 @@ namespace juce
     /** Sets the TX lead in microseconds used by the Dante audio backend.
         Must be called before the device is opened. Defaults to 1000 us. */
     JUCE_API void setDanteTxLeadUs (unsigned microseconds) noexcept;
+
+    /** Sets the RX lag in microseconds used by the Dante audio backend.
+        Must be called before the device is opened. Defaults to 0 us. */
+    JUCE_API void setDanteRxLagUs (unsigned microseconds) noexcept;
+
+    /** Sets the DEP shared-memory endpoint name the Dante audio backend connects to.
+        Must be called before scanForDevices()/createDevice(). Defaults to "DanteEP". */
+    JUCE_API void setDanteShmName (const String& name);
 }
 #endif
