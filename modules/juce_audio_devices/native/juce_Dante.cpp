@@ -7,10 +7,10 @@ static constexpr const char* kEndpointName      = "DanteEP";
 static constexpr unsigned    kDefaultSampleRate  = 48000;
 static constexpr unsigned    kDefaultNumChannels = 8;
 static constexpr unsigned    kDefaultPeriodSize  = 64;
-static constexpr unsigned    kDefaultTxLatencyUs = 1000;  // 1ms on Linux
+static constexpr unsigned    kDefaultTxLeadUs = 1000;  // 1ms on Linux
 static constexpr int         kInactiveTimeoutMs  = 1000;  // disconnect after 1s inactivity
 
-static unsigned gTxLatencyUs = kDefaultTxLatencyUs;
+static unsigned gTxLeadUs = kDefaultTxLeadUs;
 
 // Forwards WARNING/ERROR to JUCE's Logger — everything below that (INFO/DEBUG)
 // would fire every period and is too noisy to surface here.
@@ -47,7 +47,7 @@ public:
                         unsigned initialNumOutputs,
                         unsigned initialSampleRate,
                         unsigned initialPeriodSize,
-                        unsigned txLatencyUs)
+                        unsigned txLeadUs)
         : AudioIODevice (deviceName, "Dante"),
           // Linux's TASK_COMM_LEN is 16 bytes including the null terminator, so the
           // usable limit is 15 characters. pthread_setname_np() returns ERANGE (which
@@ -57,7 +57,7 @@ public:
           Thread ("JUCE/DanteAudio"),
           mContext (makeBackendLogger(), kInactiveTimeoutMs, false),
           mBufferView (mContext.getBufferView()),
-          mAccessor (mBufferView, Dante::BlockAccessorConfig (txLatencyUs)),
+          mAccessor (mBufferView, Dante::BlockAccessorConfig (txLeadUs)),
           numInputs  (initialNumInputs),
           numOutputs (initialNumOutputs),
           sampleRate (initialSampleRate),
@@ -237,7 +237,7 @@ private:
             if (cb == nullptr)
                 continue;
 
-            // Cap to periodSize: after a late recovery mTxFramesToWrite = mTxLatencyFrames
+            // Cap to periodSize: after a late recovery mTxFramesToWrite = mTxLeadFrames
             // (48 at 48 kHz) which exceeds periodSize (16), causing out-of-bounds writes
             // into the periodSize-allocated inputStorage/outputStorage buffers.
             const unsigned frames = std::min ((unsigned) txFrames, periodSize);
@@ -406,7 +406,7 @@ public:
                                        cachedNumOutputs,
                                        cachedSampleRate,
                                        cachedPeriodSize,
-                                       gTxLatencyUs);
+                                       gTxLeadUs);
     }
 
 private:
@@ -419,9 +419,9 @@ private:
 
 } // namespace DanteClasses
 
-void setDanteTxLatencyUs (unsigned microseconds) noexcept
+void setDanteTxLeadUs (unsigned microseconds) noexcept
 {
-    DanteClasses::gTxLatencyUs = microseconds;
+    DanteClasses::gTxLeadUs = microseconds;
 }
 
 } // namespace juce

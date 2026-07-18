@@ -265,8 +265,8 @@ namespace juce
 #if JUCE_DANTE
 namespace juce
 {
-    /** Sets the TX latency in microseconds used by the Dante audio backend.
+    /** Sets the TX lead in microseconds used by the Dante audio backend.
         Must be called before the device is opened. Defaults to 1000 us. */
-    JUCE_API void setDanteTxLatencyUs (unsigned microseconds) noexcept;
+    JUCE_API void setDanteTxLeadUs (unsigned microseconds) noexcept;
 }
 #endif
