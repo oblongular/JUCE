@@ -12,9 +12,29 @@ static constexpr int         kInactiveTimeoutMs  = 1000;  // disconnect after 1s
 
 static unsigned gTxLatencyUs = kDefaultTxLatencyUs;
 
-static std::shared_ptr<Dante::IDanteLogger> makeSilentLogger()
+// Forwards WARNING/ERROR to JUCE's Logger — everything below that (INFO/DEBUG)
+// would fire every period and is too noisy to surface here.
+class JuceDanteLogger final : public Dante::IDanteLogger
 {
-    return std::make_shared<Dante::PrintfLogger> (Dante::LogLevel::NONE);
+public:
+    void log (Dante::LogLevel level, const char* format, ...) override
+    {
+        if (level > Dante::LogLevel::WARNING)
+            return;
+
+        char buffer[512];
+        va_list args;
+        va_start (args, format);
+        std::vsnprintf (buffer, sizeof (buffer), format, args);
+        va_end (args);
+
+        Logger::writeToLog (String ("Dante: ") + buffer);
+    }
+};
+
+static std::shared_ptr<Dante::IDanteLogger> makeBackendLogger()
+{
+    return std::make_shared<JuceDanteLogger>();
 }
 
 //==============================================================================
@@ -35,7 +55,7 @@ public:
           // "JUCE/Dante-Audio" (16 chars) silently failed and left the thread showing
           // the inherited process name instead. Keep this at 15 characters or fewer.
           Thread ("JUCE/DanteAudio"),
-          mContext (makeSilentLogger(), kInactiveTimeoutMs, false),
+          mContext (makeBackendLogger(), kInactiveTimeoutMs, false),
           mBufferView (mContext.getBufferView()),
           mAccessor (mBufferView, Dante::BlockAccessorConfig (txLatencyUs)),
           numInputs  (initialNumInputs),
@@ -83,7 +103,7 @@ public:
         activeOutputChannels = outputChannels;
         activeOutputChannels.setRange ((int) numOutputs, 256 - (int) numOutputs, false);
         deviceOpen = true;
-        lastError  = {};
+        setLastError ({});
         return {};
     }
 
@@ -95,7 +115,12 @@ public:
 
     bool   isOpen()       override  { return deviceOpen; }
     bool   isPlaying()    override  { return playing; }
-    String getLastError() override  { return lastError; }
+
+    String getLastError() override
+    {
+        const ScopedLock sl (lastErrorLock);
+        return lastError;
+    }
 
     void start (AudioIODeviceCallback* cb) override
     {
@@ -131,9 +156,10 @@ public:
             // means silent, total audio failure (no processing loop runs) rather than
             // degraded performance, so this is worth surfacing loudly rather than
             // logging and continuing as if playback were still possible.
-            lastError = "Failed to start Dante audio thread with realtime scheduling "
-                        "(no CAP_SYS_NICE / RLIMIT_RTPRIO too low?) - audio will not run";
-            Logger::writeToLog (lastError);
+            const String message = "Failed to start Dante audio thread with realtime scheduling "
+                                    "(no CAP_SYS_NICE / RLIMIT_RTPRIO too low?) - audio will not run";
+            setLastError (message);
+            Logger::writeToLog (message);
         }
     }
 
@@ -163,6 +189,12 @@ public:
 
 private:
     //==============================================================================
+    void setLastError (const String& message)
+    {
+        const ScopedLock sl (lastErrorLock);
+        lastError = message;
+    }
+
     void run() override
     {
         while (! threadShouldExit())
@@ -170,6 +202,7 @@ private:
             if (mContext.connect (kEndpointName, false, 1) != 0)
                 continue;
 
+            setLastError ({});
             runAudioLoop();
             mContext.disconnect();
         }
@@ -183,7 +216,10 @@ private:
             const auto& poll  = result.pollInfo;
 
             if (poll.mState == Dante::BufferView::State::UNAVAILABLE)
+            {
+                setLastError ("Dante buffers unavailable — reconnecting");
                 return;
+            }
 
             if (poll.mReset)
             {
@@ -316,7 +352,9 @@ private:
     BigInteger activeInputChannels, activeOutputChannels;
     bool       deviceOpen = false;
     bool       playing    = false;
-    String     lastError;
+
+    CriticalSection lastErrorLock;
+    String          lastError;
 };
 
 //==============================================================================
@@ -327,7 +365,7 @@ public:
 
     void scanForDevices() override
     {
-        Dante::DefaultBufferContext ctx (makeSilentLogger(), 2000, false);
+        Dante::DefaultBufferContext ctx (makeBackendLogger(), 2000, false);
         if (ctx.connect (kEndpointName, false, 0) != 0)
         {
             cachedName       = "Dante-Not-Present";
